@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enkki — Gestión</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #111; color: #f0e0c0; font-family: system-ui, sans-serif; }
+input { outline: none; }
+button { cursor: pointer; }
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: #1a1a1a; }
+::-webkit-scrollbar-thumb { background: #c9a84c44; border-radius: 2px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+import { useState, useEffect } from "react";
+
+const PRODUCTOS_INICIALES = [
+  { id:"102", nombre:"Outline II", cat:"Pantallas", stock:500, pMay:17000, pMen:26500, mats:[] },
+  { id:"103", nombre:"Outline III", cat:"Pantallas", stock:400, pMay:18500, pMen:28700, mats:[] },
+  { id:"200", nombre:"Farol Mini", cat:"Faroles", stock:0, pMay:16000, pMen:25000, mats:[{id:2001,nombre:"Costo total",qty:1,unidad:"u",costo:8329}] },
+  { id:"210", nombre:"Farol Mini Vidrio Color", cat:"Faroles", stock:0, pMay:20600, pMen:31900, mats:[{id:2101,nombre:"Costo total",qty:1,unidad:"u",costo:11000}] },
+  { id:"201", nombre:"Farol Hexágono I", cat:"Faroles", stock:0, pMay:16700, pMen:25900, mats:[{id:2011,nombre:"Costo total",qty:1,unidad:"u",costo:8329}] },
+  { id:"211", nombre:"Farol Hexágono II", cat:"Faroles", stock:0, pMay:21800, pMen:33800, mats:[{id:2111,nombre:"Costo total",qty:1,unidad:"u",costo:12333}] },
+  { id:"221", nombre:"Farol Hexágono III", cat:"Faroles", stock:0, pMay:55000, pMen:85300, mats:[{id:2211,nombre:"Costo total",qty:1,unidad:"u",costo:36071}] },
+  { id:"202", nombre:"Farol Colonial I", cat:"Faroles", stock:20, pMay:16200, pMen:25100, mats:[{id:2021,nombre:"Costo total",qty:1,unidad:"u",costo:8000}] },
+  { id:"212", nombre:"Farol Colonial II", cat:"Faroles", stock:10, pMay:16700, pMen:25900, mats:[{id:2121,nombre:"Costo total",qty:1,unidad:"u",costo:8329}] },
+  { id:"203", nombre:"Farol Oriental I", cat:"Faroles", stock:10, pMay:16200, pMen:25100, mats:[{id:2031,nombre:"Costo total",qty:1,unidad:"u",costo:8000}] },
+  { id:"213", nombre:"Farol Oriental II", cat:"Faroles", stock:0, pMay:14950, pMen:23200, mats:[{id:2131,nombre:"Costo total",qty:1,unidad:"u",costo:6806}] },
+  { id:"204", nombre:"Farol Eco I", cat:"Faroles", stock:20, pMay:14950, pMen:23200, mats:[{id:2041,nombre:"Costo total",qty:1,unidad:"u",costo:7459}] },
+  { id:"214", nombre:"Farol Eco II", cat:"Faroles", stock:100, pMay:19900, pMen:30800, mats:[{id:2141,nombre:"Costo total",qty:1,unidad:"u",costo:9585}] },
+  { id:"205", nombre:"Medio Farol I", cat:"Faroles", stock:20, pMay:16200, pMen:25100, mats:[{id:2051,nombre:"Costo total",qty:1,unidad:"u",costo:8000}] },
+  { id:"215", nombre:"Medio Farol II", cat:"Faroles", stock:20, pMay:21100, pMen:32700, mats:[{id:2151,nombre:"Costo total",qty:1,unidad:"u",costo:10532}] },
+  { id:"225", nombre:"Medio Farol III", cat:"Faroles", stock:80, pMay:35000, pMen:54200, mats:[{id:2251,nombre:"Costo total",qty:1,unidad:"u",costo:30000}] },
+  { id:"301", nombre:"Tria Dual", cat:"Direccionales", stock:0, pMay:21900, pMen:33900, mats:[{id:3011,nombre:"Costo total",qty:1,unidad:"u",costo:12390}] },
+  { id:"302", nombre:"Arco Lux", cat:"Direccionales", stock:0, pMay:24500, pMen:37900, mats:[{id:3021,nombre:"Costo total",qty:1,unidad:"u",costo:13790}] },
+  { id:"312", nombre:"Arco", cat:"Direccionales", stock:0, pMay:17900, pMen:27700, mats:[{id:3121,nombre:"Costo total",qty:1,unidad:"u",costo:9672}] },
+  { id:"322", nombre:"Arco Lux One", cat:"Direccionales", stock:0, pMay:21800, pMen:33800, mats:[{id:3221,nombre:"Costo total",qty:1,unidad:"u",costo:12000}] },
+  { id:"332", nombre:"Arco One", cat:"Direccionales", stock:0, pMay:16500, pMen:25600, mats:[{id:3321,nombre:"Costo total",qty:1,unidad:"u",costo:9000}] },
+  { id:"303", nombre:"Línea 3", cat:"Direccionales", stock:0, pMay:21400, pMen:33200, mats:[{id:3031,nombre:"Costo total",qty:1,unidad:"u",costo:12000}] },
+  { id:"304", nombre:"Vectra Dual", cat:"Direccionales", stock:0, pMay:28500, pMen:44200, mats:[{id:3041,nombre:"Costo total",qty:1,unidad:"u",costo:17500}] },
+  { id:"314", nombre:"Vectra", cat:"Direccionales", stock:0, pMay:27100, pMen:42000, mats:[{id:3141,nombre:"Costo total",qty:1,unidad:"u",costo:15500}] },
+  { id:"305", nombre:"Nodo Dual", cat:"Direccionales", stock:0, pMay:20900, pMen:32400, mats:[{id:3051,nombre:"Costo total",qty:1,unidad:"u",costo:10306}] },
+  { id:"315", nombre:"Nodo", cat:"Direccionales", stock:0, pMay:17900, pMen:27700, mats:[{id:3151,nombre:"Costo total",qty:1,unidad:"u",costo:9500}] },
+  { id:"401", nombre:"Cubo Botánico I", cat:"Terrarios", stock:1, pMay:29900, pMen:46400, mats:[] },
+  { id:"411", nombre:"Cubo Botánico II", cat:"Terrarios", stock:1, pMay:29900, pMen:46400, mats:[] },
+  { id:"421", nombre:"Cubo Botánico III", cat:"Terrarios", stock:1, pMay:29900, pMen:46400, mats:[] },
+  { id:"431", nombre:"Cubo Magic Botánico", cat:"Terrarios", stock:1, pMay:32900, pMen:51000, mats:[] },
+  { id:"402", nombre:"Pirámide Botánica", cat:"Terrarios", stock:1, pMay:32700, pMen:50700, mats:[] },
+  { id:"412", nombre:"Pirámide Base Botánica", cat:"Terrarios", stock:1, pMay:33800, pMen:52400, mats:[] },
+  { id:"403", nombre:"Diamante Botánico I", cat:"Terrarios", stock:1, pMay:34600, pMen:53600, mats:[] },
+  { id:"413", nombre:"Diamante Botánico II", cat:"Terrarios", stock:1, pMay:40200, pMen:62300, mats:[] },
+  { id:"404", nombre:"Cápsula Botánica", cat:"Terrarios", stock:1, pMay:40200, pMen:62300, mats:[] },
+  { id:"405", nombre:"Gota Botánica", cat:"Terrarios", stock:1, pMay:43500, pMen:67400, mats:[] },
+  { id:"406", nombre:"Pelota Botánica", cat:"Terrarios", stock:1, pMay:43500, pMen:67400, mats:[] },
+  { id:"407", nombre:"Gema Botánica", cat:"Terrarios", stock:1, pMay:44500, pMen:69000, mats:[] },
+  { id:"501", nombre:"Cubo Sal I", cat:"Sal", stock:1, pMay:39900, pMen:61900, mats:[] },
+  { id:"511", nombre:"Cubo Sal II", cat:"Sal", stock:1, pMay:39900, pMen:61900, mats:[] },
+  { id:"521", nombre:"Cubo Sal III", cat:"Sal", stock:1, pMay:39900, pMen:61900, mats:[] },
+  { id:"531", nombre:"Cubo Magic Sal", cat:"Sal", stock:1, pMay:42700, pMen:66200, mats:[] },
+  { id:"502", nombre:"Pirámide Sal", cat:"Sal", stock:1, pMay:42600, pMen:66000, mats:[] },
+  { id:"512", nombre:"Pirámide Base Sal", cat:"Sal", stock:1, pMay:43100, pMen:66800, mats:[] },
+  { id:"503", nombre:"Diamante Sal I", cat:"Sal", stock:1, pMay:44100, pMen:68400, mats:[] },
+  { id:"513", nombre:"Diamante Sal II", cat:"Sal", stock:1, pMay:48800, pMen:75600, mats:[] },
+  { id:"504", nombre:"Cápsula Sal", cat:"Sal", stock:1, pMay:48800, pMen:75600, mats:[] },
+  { id:"505", nombre:"Gota Sal", cat:"Sal", stock:1, pMay:50300, pMen:78000, mats:[] },
+  { id:"506", nombre:"Pelota Sal", cat:"Sal", stock:1, pMay:50300, pMen:78000, mats:[] },
+  { id:"507", nombre:"Gema Sal", cat:"Sal", stock:1, pMay:52000, pMen:80600, mats:[] },
+  { id:"601", nombre:"Cubo Colgante", cat:"Vitro", stock:1, pMay:38500, pMen:59700, mats:[] },
+  { id:"631", nombre:"Cubo Magic Colgante", cat:"Vitro", stock:1, pMay:42500, pMen:65900, mats:[] },
+  { id:"602", nombre:"Pirámide Colgante", cat:"Vitro", stock:1, pMay:42900, pMen:66500, mats:[] },
+  { id:"612", nombre:"Pirámide Base Colgante", cat:"Vitro", stock:1, pMay:43400, pMen:67300, mats:[] },
+  { id:"603", nombre:"Diamante Colgante I", cat:"Vitro", stock:1, pMay:44600, pMen:69100, mats:[] },
+  { id:"613", nombre:"Diamante Colgante II", cat:"Vitro", stock:1, pMay:50500, pMen:78300, mats:[] },
+  { id:"604", nombre:"Cápsula Colgante", cat:"Vitro", stock:1, pMay:50500, pMen:78300, mats:[] },
+  { id:"605", nombre:"Gota Colgante", cat:"Vitro", stock:1, pMay:52300, pMen:81000, mats:[] },
+  { id:"606", nombre:"Pelota Colgante", cat:"Vitro", stock:1, pMay:52300, pMen:81000, mats:[] },
+  { id:"607", nombre:"Gema Colgante", cat:"Vitro", stock:1, pMay:54900, pMen:85100, mats:[] },
+  { id:"608", nombre:"Tulipa Colgante", cat:"Vitro", stock:1, pMay:42500, pMen:65900, mats:[] },
+  { id:"701", nombre:"Fanal 10×10×22 Sin Vidrio", cat:"Fanales", stock:1, pMay:21900, pMen:33900, mats:[] },
+  { id:"702", nombre:"Fanal 12×12×27 Sin Vidrio", cat:"Fanales", stock:1, pMay:24400, pMen:37800, mats:[] },
+  { id:"703", nombre:"Fanal 13×13×32 Sin Vidrio", cat:"Fanales", stock:1, pMay:28900, pMen:44800, mats:[] },
+  { id:"711", nombre:"Fanal 10×10×22 Con Vidrio", cat:"Fanales", stock:1, pMay:23400, pMen:36300, mats:[] },
+  { id:"712", nombre:"Fanal 12×12×27 Con Vidrio", cat:"Fanales", stock:1, pMay:28400, pMen:44000, mats:[] },
+  { id:"713", nombre:"Fanal 13×13×32 Con Vidrio", cat:"Fanales", stock:1, pMay:32900, pMen:51000, mats:[] },
+  { id:"721", nombre:"Fanal 10×10×22 Vidrio Color", cat:"Fanales", stock:1, pMay:26400, pMen:40900, mats:[] },
+  { id:"722", nombre:"Fanal 12×12×27 Vidrio Color", cat:"Fanales", stock:1, pMay:32800, pMen:50800, mats:[] },
+  { id:"723", nombre:"Fanal 13×13×32 Vidrio Color", cat:"Fanales", stock:150, pMay:38700, pMen:60000, mats:[] },
+  { id:"801", nombre:"Pentágono", cat:"Geometría", stock:1, pMay:27900, pMen:43200, mats:[] },
+  { id:"802", nombre:"Estrella Cardinal", cat:"Geometría", stock:1, pMay:33300, pMen:51600, mats:[] },
+  { id:"803", nombre:"Orbe", cat:"Geometría", stock:1, pMay:37900, pMen:58700, mats:[] },
+  { id:"804", nombre:"Gema", cat:"Geometría", stock:1, pMay:51000, pMen:74000, mats:[] },
+  { id:"805", nombre:"Estrella Tetraédrica", cat:"Geometría", stock:1, pMay:38500, pMen:59700, mats:[] },
+  { id:"806", nombre:"Axial", cat:"Geometría", stock:1, pMay:22700, pMen:35200, mats:[] },
+  { id:"807", nombre:"Semilla", cat:"Geometría", stock:1, pMay:17400, pMen:26900, mats:[] },
+];
+
+const CATS = ["Pantallas","Faroles","Direccionales","Terrarios","Sal","Vitro","Fanales","Geometría"];
+const GOLD = "#c9a84c";
+const fmt = n => "$" + Number(n).toLocaleString("es-AR");
+
+// ── SUPABASE CONFIG ──────────────────────────────────────────────────────────
+const SUPA_URL = "https://mnpxqfuniizefnkzhszy.supabase.co";
+const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ucHhxZnVuaWl6ZWZua3poc3p5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMjQwMDksImV4cCI6MjA5NDkwMDAwOX0.jsJ4dg0r0jQv2pEPPosoeM1eXlS1m5k2xy3CiATRPBU";
+
+const headers = {
+  "Content-Type": "application/json",
+  "apikey": SUPA_KEY,
+  "Authorization": "Bearer " + SUPA_KEY,
+  "Prefer": "return=minimal"
+};
+
+async function cargarDatos() {
+  try {
+    const res = await fetch(SUPA_URL + "/rest/v1/enkki_datos?id=eq.main&select=productos,ventas", { headers });
+    const json = await res.json();
+    if (json && json[0] && json[0].productos && json[0].productos.length > 0) {
+      const saved = { productos: json[0].productos, ventas: json[0].ventas || [] };
+      // Sincronizar costos precargados
+      saved.productos = saved.productos.map(p => {
+        const ini = PRODUCTOS_INICIALES.find(x => x.id === p.id);
+        if (!ini || ini.mats.length === 0) return p;
+        const matsUsuario = p.mats.filter(m => m.id > 100000);
+        return { ...p, mats: [...ini.mats, ...matsUsuario] };
+      });
+      return saved;
+    }
+  } catch(e) { console.log("Error Supabase:", e); }
+  return { productos: PRODUCTOS_INICIALES, ventas: [] };
+}
+
+async function guardarDatos(data) {
+  try {
+    await fetch(SUPA_URL + "/rest/v1/enkki_datos?id=eq.main", {
+      method: "PATCH",
+      headers,
+      body: JSON.stringify({ productos: data.productos, ventas: data.ventas, updated_at: new Date().toISOString() })
+    });
+    // Si no existe aún, crear
+    const res = await fetch(SUPA_URL + "/rest/v1/enkki_datos?id=eq.main&select=id", { headers });
+    const rows = await res.json();
+    if (!rows || rows.length === 0) {
+      await fetch(SUPA_URL + "/rest/v1/enkki_datos", {
+        method: "POST",
+        headers: { ...headers, "Prefer": "return=minimal" },
+        body: JSON.stringify({ id: "main", productos: data.productos, ventas: data.ventas })
+      });
+    }
+  } catch(e) { console.log("Error guardando:", e); }
+}
+
+// ── ESTILOS BASE ─────────────────────────────────────────────────────────────
+const S = {
+  card: { background:"#1c1c1c", border:"1px solid #2a2a2a", borderRadius:14, padding:"12px 14px" },
+  input: { width:"100%", background:"#242424", border:"1px solid #333", borderRadius:10, padding:"10px 13px", color:"#f0e0c0", fontSize:15, boxSizing:"border-box", outline:"none" },
+  btnGold: { background:GOLD, color:"#111", border:"none", borderRadius:11, padding:"13px", fontSize:15, fontWeight:700, cursor:"pointer", width:"100%" },
+  btnDark: { background:"#2a2a2a", color:"#888", border:"none", borderRadius:11, padding:"13px", fontSize:14, cursor:"pointer" },
+  label: { color:"#666", fontSize:11, letterSpacing:1, textTransform:"uppercase", display:"block", marginBottom:5 },
+};
+
+// ── MODAL ────────────────────────────────────────────────────────────────────
+function Modal({ title, onClose, children }) {
+  return (
+    <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.8)", zIndex:200, display:"flex", alignItems:"flex-end" }}>
+      <div style={{ background:"#181818", borderRadius:"18px 18px 0 0", width:"100%", maxHeight:"88vh", overflowY:"auto", padding:"22px 18px 36px" }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:18 }}>
+          <span style={{ fontFamily:"Georgia,serif", fontSize:17, color:"#f0e0c0", fontWeight:700 }}>{title}</span>
+          <button onClick={onClose} style={{ background:"#2a2a2a", border:"none", borderRadius:8, padding:"6px 11px", color:"#888", cursor:"pointer", fontSize:16 }}>✕</button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// ── TAB STOCK ────────────────────────────────────────────────────────────────
+function TabStock({ data, setData, guardar }) {
+  const [cat, setCat] = useState("Pantallas");
+  const [q, setQ] = useState("");
+  const [edit, setEdit] = useState(null);
+  const [form, setForm] = useState({});
+
+  const lista = data.productos.filter(p =>
+    (q ? p.nombre.toLowerCase().includes(q.toLowerCase()) || p.id.includes(q) : p.cat === cat)
+  );
+
+  const totalStock = data.productos.reduce((s, p) => s + p.stock * p.pMen, 0);
+
+  function abrirEdit(p) { setEdit(p.id); setForm({ stock: p.stock, pMay: p.pMay, pMen: p.pMen }); }
+
+  function guardarEdit() {
+    const np = data.productos.map(p => p.id === edit ? { ...p, stock: +form.stock, pMay: +form.pMay, pMen: +form.pMen } : p);
+    const nd = { ...data, productos: np };
+    setData(nd); guardar(nd); setEdit(null);
+  }
+
+  return (
+    <div>
+      {/* Banner total */}
+      <div style={{ background:"linear-gradient(135deg,#2a1c08,#1a1a1a)", border:"1px solid #c9a84c22", borderRadius:14, padding:"14px 18px", marginBottom:14 }}>
+        <div style={{ color:GOLD, fontSize:10, letterSpacing:2 }}>VALOR TOTAL STOCK (MINORISTA)</div>
+        <div style={{ color:"#f0e0c0", fontSize:24, fontFamily:"Georgia,serif", fontWeight:700, marginTop:3 }}>{fmt(totalStock)}</div>
+      </div>
+
+      {/* Buscar */}
+      <input value={q} onChange={e => setQ(e.target.value)} placeholder="🔍  Buscar por nombre o código..." style={{ ...S.input, marginBottom:12 }} />
+
+      {/* Cats */}
+      {!q && (
+        <div style={{ display:"flex", gap:7, overflowX:"auto", paddingBottom:8, marginBottom:12 }}>
+          {CATS.map(c => (
+            <button key={c} onClick={() => setCat(c)} style={{ flexShrink:0, padding:"5px 13px", borderRadius:18, border:"none", cursor:"pointer", fontSize:12, fontWeight:600, background: cat===c ? GOLD : "#222", color: cat===c ? "#111" : "#666" }}>{c}</button>
+          ))}
+        </div>
+      )}
+
+      {/* Lista */}
+      <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+        {lista.map(p => {
+          const alerta = p.stock === 0;
+          const bajo = p.stock > 0 && p.stock <= 5;
+          return (
+            <div key={p.id} style={{ ...S.card, borderColor: alerta ? "#c0392b33" : bajo ? "#c9a84c33" : "#2a2a2a", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+              <div style={{ flex:1 }}>
+                <div style={{ display:"flex", gap:6, alignItems:"center", marginBottom:4 }}>
+                  <span style={{ background:"#2a2a2a", color:GOLD, fontSize:10, padding:"2px 7px", borderRadius:5, fontWeight:700 }}>{p.id}</span>
+                  {alerta && <span style={{ background:"#c0392b22", color:"#e74c3c", fontSize:9, padding:"2px 6px", borderRadius:4 }}>SIN STOCK</span>}
+                  {bajo && <span style={{ background:"#c9a84c22", color:GOLD, fontSize:9, padding:"2px 6px", borderRadius:4 }}>POCO</span>}
+                </div>
+                <div style={{ color:"#f0e0c0", fontSize:14, fontWeight:600, marginBottom:3 }}>{p.nombre}</div>
+                <div style={{ fontSize:12, color:"#666" }}>May: <span style={{ color:"#aaa" }}>{fmt(p.pMay)}</span> &nbsp; Men: <span style={{ color:GOLD }}>{fmt(p.pMen)}</span></div>
+              </div>
+              <div style={{ display:"flex", alignItems:"center", gap:10, marginLeft:10 }}>
+                <div style={{ textAlign:"center" }}>
+                  <div style={{ fontSize:22, fontWeight:800, color: alerta ? "#e74c3c" : bajo ? GOLD : "#f0e0c0", fontFamily:"Georgia,serif" }}>{p.stock}</div>
+                  <div style={{ fontSize:9, color:"#444", textTransform:"uppercase" }}>uds</div>
+                </div>
+                <button onClick={() => abrirEdit(p)} style={{ background:"#2a2a2a", border:"none", borderRadius:8, padding:"8px 9px", color:GOLD, cursor:"pointer", fontSize:14 }}>✏️</button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {edit && (() => {
+        const p = data.productos.find(x => x.id === edit);
+        return (
+          <Modal title={`${p.id} — ${p.nombre}`} onClose={() => setEdit(null)}>
+            {[["Stock","stock"],["Precio mayorista","pMay"],["Precio minorista","pMen"]].map(([lb, k]) => (
+              <div key={k} style={{ marginBottom:13 }}>
+                <label style={S.label}>{lb}</label>
+                <input type="number" value={form[k]} onChange={e => setForm(f => ({ ...f, [k]: e.target.value }))} style={S.input} />
+              </div>
+            ))}
+            <button onClick={guardarEdit} style={S.btnGold}>Guardar</button>
+          </Modal>
+        );
+      })()}
+    </div>
+  );
+}
+
+// ── TAB VENDER ───────────────────────────────────────────────────────────────
+function TabVender({ data, setData, guardar }) {
+  const [q, setQ] = useState("");
+  const [carrito, setCarrito] = useState([]);
+  const [canal, setCanal] = useState("men");
+  const [confirmando, setConfirmando] = useState(false);
+  const [ok, setOk] = useState(false);
+
+  const sugerencias = q.length >= 2 ? data.productos.filter(p =>
+    p.nombre.toLowerCase().includes(q.toLowerCase()) || p.id.includes(q)
+  ).slice(0, 5) : [];
+
+  function agregar(p) {
+    setQ("");
+    setCarrito(prev => {
+      const ex = prev.find(c => c.id === p.id);
+      return ex ? prev.map(c => c.id === p.id ? { ...c, qty: c.qty + 1 } : c) : [...prev, { ...p, qty: 1 }];
+    });
+  }
+
+  function qty(id, d) { setCarrito(prev => prev.map(c => c.id === id ? { ...c, qty: Math.max(0, c.qty + d) } : c).filter(c => c.qty > 0)); }
+
+  const total = carrito.reduce((s, c) => s + c.qty * (canal === "men" ? c.pMen : c.pMay), 0);
+
+  function confirmar() {
+    const venta = {
+      id: Date.now(),
+      fecha: new Date().toLocaleDateString("es-AR"),
+      hora: new Date().toLocaleTimeString("es-AR", { hour:"2-digit", minute:"2-digit" }),
+      canal,
+      items: carrito.map(c => ({ id:c.id, nombre:c.nombre, qty:c.qty, precio: canal === "men" ? c.pMen : c.pMay })),
+      total,
+    };
+    const np = data.productos.map(p => {
+      const item = carrito.find(c => c.id === p.id);
+      return item ? { ...p, stock: Math.max(0, p.stock - item.qty) } : p;
+    });
+    const nd = { ...data, productos: np, ventas: [venta, ...data.ventas] };
+    setData(nd); guardar(nd); setCarrito([]); setConfirmando(false);
+    setOk(true); setTimeout(() => setOk(false), 3000);
+  }
+
+  function generarWhatsApp() {
+    const fecha = new Date().toLocaleDateString("es-AR");
+    const canalTexto = canal === "men" ? "Minorista" : "Mayorista";
+    let msg = "";
+    msg += "✨ *ENKKI* — Iluminación & Decoración\n";
+    msg += "━━━━━━━━━━━━━━━━━━\n\n";
+    msg += `📋 *Presupuesto ${canalTexto}*\n`;
+    msg += `📅 ${fecha}\n\n`;
+    msg += "*Detalle del pedido:*\n";
+    carrito.forEach(c => {
+      const precio = canal === "men" ? c.pMen : c.pMay;
+      msg += `• ${c.qty}× ${c.nombre} — $${(precio * c.qty).toLocaleString("es-AR")}\n`;
+    });
+    msg += "\n━━━━━━━━━━━━━━━━━━\n";
+    msg += `💰 *TOTAL: $${total.toLocaleString("es-AR")}*\n`;
+    msg += "━━━━━━━━━━━━━━━━━━\n\n";
+    msg += "🔦 Fabricación artesanal en chapa y vidrio\n";
+    msg += "📱 3415824371\n";
+    msg += "🌐 enkki-catalogo.netlify.app\n\n";
+    msg += "_La antítesis del plástico_ 🖤";
+    const url = "https://wa.me/?text=" + encodeURIComponent(msg);
+    window.open(url, "_blank");
+  }
+
+  return (
+    <div>
+      {ok && <div style={{ background:"#1a3a1a", border:"1px solid #27ae60", borderRadius:10, padding:"11px 14px", marginBottom:14, color:"#27ae60", fontWeight:600, fontSize:14 }}>✓ Venta registrada — stock actualizado</div>}
+
+      <div style={{ display:"flex", gap:8, marginBottom:14 }}>
+        {[["men","🏠 Minorista"],["may","📦 Mayorista"]].map(([v, lb]) => (
+          <button key={v} onClick={() => setCanal(v)} style={{ flex:1, padding:"10px", borderRadius:10, border:"none", cursor:"pointer", fontWeight:700, fontSize:13, background: canal===v ? GOLD : "#222", color: canal===v ? "#111" : "#666" }}>{lb}</button>
+        ))}
+      </div>
+
+      <div style={{ position:"relative", marginBottom:14 }}>
+        <input value={q} onChange={e => setQ(e.target.value)} placeholder="Buscar producto para agregar..." style={S.input} />
+        {sugerencias.length > 0 && (
+          <div style={{ position:"absolute", top:"105%", left:0, right:0, background:"#1e1e1e", border:"1px solid #333", borderRadius:10, zIndex:10, overflow:"hidden" }}>
+            {sugerencias.map(p => (
+              <button key={p.id} onClick={() => agregar(p)} style={{ width:"100%", background:"transparent", border:"none", borderBottom:"1px solid #2a2a2a", padding:"10px 13px", color:"#f0e0c0", cursor:"pointer", textAlign:"left", display:"flex", justifyContent:"space-between" }}>
+                <span><span style={{ color:GOLD, fontSize:11, marginRight:6 }}>{p.id}</span>{p.nombre}</span>
+                <span style={{ color:"#555", fontSize:12 }}>stock: {p.stock}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {carrito.length === 0 ? (
+        <div style={{ textAlign:"center", color:"#444", padding:"50px 0", fontSize:14 }}>Buscá un producto para empezar la venta</div>
+      ) : (
+        <>
+          <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:14 }}>
+            {carrito.map(c => {
+              const precio = canal === "men" ? c.pMen : c.pMay;
+              const stockReal = data.productos.find(p => p.id === c.id)?.stock ?? 0;
+              const sinStock = c.qty > stockReal;
+              return (
+                <div key={c.id} style={{ ...S.card, borderColor: sinStock ? "#c0392b44" : "#2a2a2a" }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                    <div><span style={{ color:GOLD, fontSize:11 }}>{c.id}</span> <span style={{ color:"#f0e0c0", fontSize:14, fontWeight:600 }}>{c.nombre}</span></div>
+                    <span style={{ color:GOLD, fontWeight:700 }}>{fmt(precio * c.qty)}</span>
+                  </div>
+                  {sinStock && <div style={{ color:"#e74c3c", fontSize:11, marginTop:3 }}>⚠ Stock insuficiente (hay {stockReal})</div>}
+                  <div style={{ display:"flex", alignItems:"center", gap:10, marginTop:9 }}>
+                    <button onClick={() => qty(c.id, -1)} style={{ background:"#2a2a2a", border:"none", borderRadius:7, width:30, height:30, color:"#f0e0c0", fontSize:18, cursor:"pointer" }}>−</button>
+                    <span style={{ color:"#f0e0c0", fontWeight:700, minWidth:28, textAlign:"center" }}>{c.qty}</span>
+                    <button onClick={() => qty(c.id, 1)} style={{ background:"#2a2a2a", border:"none", borderRadius:7, width:30, height:30, color:"#f0e0c0", fontSize:18, cursor:"pointer" }}>+</button>
+                    <span style={{ color:"#555", fontSize:12 }}>{fmt(precio)} c/u</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div style={{ background:"#1e1407", border:"1px solid #c9a84c33", borderRadius:12, padding:"13px 16px", marginBottom:12, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+            <span style={{ color:"#888" }}>Total {canal === "men" ? "minorista" : "mayorista"}</span>
+            <span style={{ color:GOLD, fontSize:22, fontWeight:700, fontFamily:"Georgia,serif" }}>{fmt(total)}</span>
+          </div>
+
+          <div style={{ display:"flex", gap:10, marginBottom:10 }}>
+            <button onClick={() => setCarrito([])} style={{ ...S.btnDark, flex:1 }}>Cancelar</button>
+            <button onClick={() => setConfirmando(true)} style={{ ...S.btnGold, flex:2 }}>Registrar venta</button>
+          </div>
+          <button onClick={generarWhatsApp} style={{ width:"100%", background:"#1a3a1a", color:"#25d366", border:"1px solid #25d36644", borderRadius:11, padding:"13px", fontSize:15, fontWeight:700, cursor:"pointer" }}>
+            💬 Enviar presupuesto por WhatsApp
+          </button>
+        </>
+      )}
+
+      {confirmando && (
+        <Modal title="Confirmar venta" onClose={() => setConfirmando(false)}>
+          <p style={{ color:"#888", fontSize:14, marginBottom:14 }}>
+            {carrito.reduce((s,c)=>s+c.qty,0)} productos · <strong style={{ color:GOLD }}>{fmt(total)}</strong> · El stock se descuenta automáticamente.
+          </p>
+          {carrito.map(c => (
+            <div key={c.id} style={{ display:"flex", justifyContent:"space-between", color:"#aaa", fontSize:13, marginBottom:5 }}>
+              <span>{c.qty}× {c.nombre}</span>
+              <span>{fmt((canal==="men"?c.pMen:c.pMay)*c.qty)}</span>
+            </div>
+          ))}
+          <button onClick={confirmar} style={{ ...S.btnGold, marginTop:18 }}>✓ Confirmar y descontar stock</button>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+// ── TAB COSTOS ───────────────────────────────────────────────────────────────
+function TabCostos({ data, setData, guardar }) {
+  const [sel, setSel] = useState(null);
+  const [q, setQ] = useState("");
+  const [mat, setMat] = useState({ nombre:"", qty:"", unidad:"", costo:"" });
+
+  const lista = data.productos.filter(p =>
+    q ? p.nombre.toLowerCase().includes(q.toLowerCase()) || p.id.includes(q) : true
+  );
+
+  const prod = sel ? data.productos.find(p => p.id === sel) : null;
+  const costoTotal = prod ? prod.mats.reduce((s, m) => s + m.qty * m.costo, 0) : 0;
+
+  function agregarMat() {
+    if (!mat.nombre || !mat.costo) return;
+    const np = data.productos.map(p => p.id !== sel ? p : { ...p, mats: [...p.mats, { ...mat, id: Date.now(), qty: +mat.qty || 1, costo: +mat.costo }] });
+    const nd = { ...data, productos: np }; setData(nd); guardar(nd);
+    setMat({ nombre:"", qty:"", unidad:"", costo:"" });
+  }
+
+  function eliminarMat(mid) {
+    const np = data.productos.map(p => p.id !== sel ? p : { ...p, mats: p.mats.filter(m => m.id !== mid) });
+    const nd = { ...data, productos: np }; setData(nd); guardar(nd);
+  }
+
+  if (sel && prod) {
+    const mMen = costoTotal > 0 ? ((prod.pMen - costoTotal) / prod.pMen * 100).toFixed(0) : "—";
+    const mMay = costoTotal > 0 ? ((prod.pMay - costoTotal) / prod.pMay * 100).toFixed(0) : "—";
+    return (
+      <div>
+        <button onClick={() => setSel(null)} style={{ background:"#222", border:"none", borderRadius:8, padding:"7px 14px", color:GOLD, cursor:"pointer", marginBottom:14, fontSize:13 }}>← Volver</button>
+        <div style={{ ...S.card, marginBottom:14 }}>
+          <div style={{ color:GOLD, fontSize:11 }}>{prod.id}</div>
+          <div style={{ color:"#f0e0c0", fontSize:17, fontWeight:700, fontFamily:"Georgia,serif", marginTop:2 }}>{prod.nombre}</div>
+        </div>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8, marginBottom:14 }}>
+          {[["Costo",fmt(costoTotal),"#e74c3c"],["Margen Men",mMen+"%","#27ae60"],["Margen May",mMay+"%","#3498db"]].map(([lb,v,c])=>(
+            <div key={lb} style={{ ...S.card, textAlign:"center" }}>
+              <div style={{ color:c, fontSize:14, fontWeight:700 }}>{v}</div>
+              <div style={{ color:"#555", fontSize:10, marginTop:2 }}>{lb}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ color:"#555", fontSize:11, letterSpacing:1, marginBottom:8 }}>MATERIALES</div>
+        {prod.mats.length === 0 ? (
+          <div style={{ color:"#444", fontSize:13, textAlign:"center", padding:24 }}>Sin materiales cargados aún</div>
+        ) : (
+          <div style={{ display:"flex", flexDirection:"column", gap:7, marginBottom:14 }}>
+            {prod.mats.map(m => (
+              <div key={m.id} style={{ ...S.card, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                <div>
+                  <div style={{ color:"#f0e0c0", fontSize:13, fontWeight:600 }}>{m.nombre}</div>
+                  <div style={{ color:"#555", fontSize:11 }}>{m.qty} {m.unidad} × {fmt(m.costo)}</div>
+                </div>
+                <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                  <span style={{ color:GOLD, fontWeight:700 }}>{fmt(m.qty*m.costo)}</span>
+                  <button onClick={() => eliminarMat(m.id)} style={{ background:"#2a2a2a", border:"none", borderRadius:6, padding:"5px 8px", color:"#e74c3c", cursor:"pointer" }}>✕</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        <div style={{ ...S.card, borderColor:"#c9a84c22" }}>
+          <div style={{ color:"#666", fontSize:11, letterSpacing:1, marginBottom:10 }}>+ NUEVO MATERIAL</div>
+          <input placeholder="Nombre (ej: Chapa 0.8mm)" value={mat.nombre} onChange={e => setMat(f=>({...f,nombre:e.target.value}))} style={{ ...S.input, marginBottom:8 }} />
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:7, marginBottom:10 }}>
+            <input placeholder="Cant." type="number" value={mat.qty} onChange={e => setMat(f=>({...f,qty:e.target.value}))} style={{ ...S.input }} />
+            <input placeholder="Unidad" value={mat.unidad} onChange={e => setMat(f=>({...f,unidad:e.target.value}))} style={{ ...S.input }} />
+            <input placeholder="$ costo" type="number" value={mat.costo} onChange={e => setMat(f=>({...f,costo:e.target.value}))} style={{ ...S.input }} />
+          </div>
+          <button onClick={agregarMat} style={S.btnGold}>Agregar material</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <input value={q} onChange={e => setQ(e.target.value)} placeholder="🔍  Buscar producto..." style={{ ...S.input, marginBottom:12 }} />
+      <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+        {lista.map(p => {
+          const costo = p.mats.reduce((s,m)=>s+m.qty*m.costo,0);
+          const margen = costo > 0 ? ((p.pMen-costo)/p.pMen*100).toFixed(0) : null;
+          return (
+            <button key={p.id} onClick={() => setSel(p.id)} style={{ ...S.card, border:"1px solid #2a2a2a", textAlign:"left", cursor:"pointer", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+              <div>
+                <span style={{ color:GOLD, fontSize:10, marginRight:6 }}>{p.id}</span>
+                <span style={{ color:"#f0e0c0", fontSize:14, fontWeight:600 }}>{p.nombre}</span>
+                <div style={{ color:"#555", fontSize:12, marginTop:2 }}>{p.mats.length} materiales</div>
+              </div>
+              <div style={{ textAlign:"right" }}>
+                {costo > 0 ? <>
+                  <div style={{ color:"#e74c3c", fontSize:13, fontWeight:600 }}>{fmt(costo)}</div>
+                  <div style={{ color:"#27ae60", fontSize:11 }}>margen {margen}%</div>
+                </> : <div style={{ color:"#333", fontSize:12 }}>Sin costo</div>}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── TAB HISTORIAL ─────────────────────────────────────────────────────────────
+function TabHistorial({ data, setData, guardar }) {
+  const total = data.ventas.reduce((s,v)=>s+v.total,0);
+
+  function eliminar(id) {
+    const nd = { ...data, ventas: data.ventas.filter(v=>v.id!==id) };
+    setData(nd); guardar(nd);
+  }
+
+  if (!data.ventas.length) return (
+    <div style={{ textAlign:"center", color:"#444", padding:"60px 0", fontSize:14 }}>
+      Aún no hay ventas registradas.<br/><span style={{ color:"#333" }}>Aparecerán acá cuando vendas.</span>
+    </div>
+  );
+
+  return (
+    <div>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:16 }}>
+        <div style={{ ...S.card, textAlign:"center" }}>
+          <div style={{ color:GOLD, fontSize:19, fontWeight:700, fontFamily:"Georgia,serif" }}>{fmt(total)}</div>
+          <div style={{ color:"#555", fontSize:10, marginTop:2 }}>TOTAL FACTURADO</div>
+        </div>
+        <div style={{ ...S.card, textAlign:"center" }}>
+          <div style={{ color:"#f0e0c0", fontSize:19, fontWeight:700, fontFamily:"Georgia,serif" }}>{data.ventas.length}</div>
+          <div style={{ color:"#555", fontSize:10, marginTop:2 }}>VENTAS</div>
+        </div>
+      </div>
+      <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+        {data.ventas.map(v => (
+          <div key={v.id} style={S.card}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
+              <div>
+                <span style={{ color:"#f0e0c0", fontSize:13, fontWeight:600 }}>{v.fecha}</span>
+                <span style={{ color:"#555", fontSize:12, marginLeft:7 }}>{v.hora}</span>
+                <span style={{ background: v.canal==="men" ? "#c9a84c22" : "#3498db22", color: v.canal==="men" ? GOLD : "#3498db", fontSize:10, padding:"2px 7px", borderRadius:5, marginLeft:7, textTransform:"uppercase" }}>{v.canal==="men"?"Minorista":"Mayorista"}</span>
+              </div>
+              <button onClick={() => eliminar(v.id)} style={{ background:"#2a2a2a", border:"none", borderRadius:6, padding:"4px 8px", color:"#555", cursor:"pointer" }}>✕</button>
+            </div>
+            {v.items.map((it,i) => (
+              <div key={i} style={{ display:"flex", justifyContent:"space-between", color:"#777", fontSize:12, marginBottom:3 }}>
+                <span>{it.qty}× {it.nombre}</span><span>{fmt(it.precio*it.qty)}</span>
+              </div>
+            ))}
+            <div style={{ borderTop:"1px solid #2a2a2a", marginTop:8, paddingTop:8, display:"flex", justifyContent:"space-between" }}>
+              <span style={{ color:"#666", fontSize:13 }}>Total</span>
+              <span style={{ color:GOLD, fontWeight:700, fontSize:15 }}>{fmt(v.total)}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── APP ───────────────────────────────────────────────────────────────────────
+export default function App() {
+  const [tab, setTab] = useState("stock");
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    cargarDatos().then(d => { setData(d); setLoading(false); });
+  }, []);
+
+  const guardar = (d) => guardarDatos(d);
+
+  if (loading) return (
+    <div style={{ background:"#111", minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center" }}>
+      <div style={{ color:GOLD, fontFamily:"Georgia,serif", fontSize:20 }}>enkki</div>
+    </div>
+  );
+
+  const tabs = [
+    { id:"stock", icon:"📦", label:"Stock" },
+    { id:"vender", icon:"🛒", label:"Vender" },
+    { id:"costos", icon:"💲", label:"Costos" },
+    { id:"historial", icon:"📋", label:"Historial" },
+  ];
+
+  return (
+    <div style={{ background:"#111", minHeight:"100vh", color:"#f0e0c0", fontFamily:"system-ui,sans-serif", maxWidth:600, margin:"0 auto", paddingBottom:75 }}>
+      {/* Header */}
+      <div style={{ padding:"20px 18px 14px", borderBottom:"1px solid #1e1e1e", display:"flex", alignItems:"baseline", gap:10 }}>
+        <span style={{ fontFamily:"Georgia,serif", fontSize:24, fontWeight:700, color:GOLD }}>enkki</span>
+        <span style={{ color:"#333", fontSize:11, letterSpacing:2 }}>GESTIÓN</span>
+      </div>
+
+      {/* Contenido */}
+      <div style={{ padding:"18px 15px" }}>
+        {tab === "stock"    && <TabStock     data={data} setData={setData} guardar={guardar} />}
+        {tab === "vender"   && <TabVender    data={data} setData={setData} guardar={guardar} />}
+        {tab === "costos"   && <TabCostos    data={data} setData={setData} guardar={guardar} />}
+        {tab === "historial"&& <TabHistorial data={data} setData={setData} guardar={guardar} />}
+      </div>
+
+      {/* Nav */}
+      <div style={{ position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)", width:"100%", maxWidth:600, background:"#151515", borderTop:"1px solid #1e1e1e", display:"flex", zIndex:100 }}>
+        {tabs.map(t => (
+          <button key={t.id} onClick={() => setTab(t.id)} style={{ flex:1, padding:"11px 0 9px", background:"transparent", border:"none", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:3, color: tab===t.id ? GOLD : "#444" }}>
+            <span style={{ fontSize:18 }}>{t.icon}</span>
+            <span style={{ fontSize:10, fontWeight:600 }}>{t.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>
