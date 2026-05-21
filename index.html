@@ -2,636 +2,501 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Enkki — Gestión</title>
-<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: #111; color: #f0e0c0; font-family: system-ui, sans-serif; }
-input { outline: none; }
-button { cursor: pointer; }
-::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: #1a1a1a; }
-::-webkit-scrollbar-thumb { background: #c9a84c44; border-radius: 2px; }
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#111;color:#f0e0c0;font-family:system-ui,sans-serif;max-width:600px;margin:0 auto;padding-bottom:80px}
+input,button{font-family:inherit;outline:none}
+.gold{color:#c9a84c}
+.header{padding:20px 16px 14px;border-bottom:1px solid #1e1e1e;display:flex;align-items:baseline;gap:10px}
+.header h1{font-family:Georgia,serif;font-size:24px;font-weight:700;color:#c9a84c}
+.header span{color:#333;font-size:11px;letter-spacing:2px}
+.content{padding:16px}
+/* NAV */
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:600px;background:#151515;border-top:1px solid #1e1e1e;display:flex;z-index:100}
+.nav button{flex:1;padding:11px 0 9px;background:transparent;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;color:#444;font-size:10px;font-weight:600}
+.nav button.active{color:#c9a84c}
+.nav button span.ico{font-size:18px}
+/* CARDS */
+.card{background:#1c1c1c;border:1px solid #2a2a2a;border-radius:14px;padding:12px 14px;margin-bottom:8px}
+.card.alert{border-color:#c0392b33}
+.card.warn{border-color:#c9a84c33}
+/* INPUTS */
+input[type=text],input[type=number],input[type=search]{width:100%;background:#242424;border:1px solid #333;border-radius:10px;padding:10px 13px;color:#f0e0c0;font-size:15px}
+/* BUTTONS */
+.btn-gold{background:#c9a84c;color:#111;border:none;border-radius:11px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;width:100%}
+.btn-dark{background:#2a2a2a;color:#888;border:none;border-radius:11px;padding:13px;font-size:14px;cursor:pointer}
+.btn-sm{background:#2a2a2a;border:none;border-radius:8px;padding:8px 10px;color:#c9a84c;cursor:pointer;font-size:13px}
+.tag{font-size:10px;padding:2px 7px;border-radius:5px;font-weight:700}
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;display:flex;align-items:flex-end}
+.modal{background:#181818;border-radius:18px 18px 0 0;width:100%;max-height:88vh;overflow-y:auto;padding:22px 18px 36px}
+.modal h3{font-family:Georgia,serif;font-size:17px;color:#f0e0c0;font-weight:700;margin-bottom:18px}
+.label{color:#666;font-size:11px;letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:5px;margin-top:12px}
+/* TABS */
+.cats{display:flex;gap:7px;overflow-x:auto;padding-bottom:8px;margin-bottom:12px;scrollbar-width:none}
+.cats::-webkit-scrollbar{display:none}
+.cat-btn{flex-shrink:0;padding:5px 13px;border-radius:18px;border:none;cursor:pointer;font-size:12px;font-weight:600;background:#222;color:#666}
+.cat-btn.active{background:#c9a84c;color:#111}
+/* TOTALES */
+.total-box{background:linear-gradient(135deg,#2a1c08,#1a1a1a);border:1px solid #c9a84c22;border-radius:14px;padding:14px 18px;margin-bottom:14px}
+/* QTY */
+.qty-row{display:flex;align-items:center;gap:10px;margin-top:9px}
+.qty-btn{background:#2a2a2a;border:none;border-radius:7px;width:30px;height:30px;color:#f0e0c0;font-size:18px;cursor:pointer}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px}
+.stat-box{background:#1c1c1c;border-radius:10px;padding:10px;text-align:center}
+.success{background:#1a3a1a;border:1px solid #27ae60;border-radius:10px;padding:11px 14px;margin-bottom:14px;color:#27ae60;font-weight:600;font-size:14px}
 </style>
 </head>
 <body>
-<div id="root"></div>
-<script type="text/babel" data-presets="react">
-import { useState, useEffect } from "react";
 
-const PRODUCTOS_INICIALES = [
-  { id:"102", nombre:"Outline II", cat:"Pantallas", stock:500, pMay:17000, pMen:26500, mats:[] },
-  { id:"103", nombre:"Outline III", cat:"Pantallas", stock:400, pMay:18500, pMen:28700, mats:[] },
-  { id:"200", nombre:"Farol Mini", cat:"Faroles", stock:0, pMay:16000, pMen:25000, mats:[{id:2001,nombre:"Costo total",qty:1,unidad:"u",costo:8329}] },
-  { id:"210", nombre:"Farol Mini Vidrio Color", cat:"Faroles", stock:0, pMay:20600, pMen:31900, mats:[{id:2101,nombre:"Costo total",qty:1,unidad:"u",costo:11000}] },
-  { id:"201", nombre:"Farol Hexágono I", cat:"Faroles", stock:0, pMay:16700, pMen:25900, mats:[{id:2011,nombre:"Costo total",qty:1,unidad:"u",costo:8329}] },
-  { id:"211", nombre:"Farol Hexágono II", cat:"Faroles", stock:0, pMay:21800, pMen:33800, mats:[{id:2111,nombre:"Costo total",qty:1,unidad:"u",costo:12333}] },
-  { id:"221", nombre:"Farol Hexágono III", cat:"Faroles", stock:0, pMay:55000, pMen:85300, mats:[{id:2211,nombre:"Costo total",qty:1,unidad:"u",costo:36071}] },
-  { id:"202", nombre:"Farol Colonial I", cat:"Faroles", stock:20, pMay:16200, pMen:25100, mats:[{id:2021,nombre:"Costo total",qty:1,unidad:"u",costo:8000}] },
-  { id:"212", nombre:"Farol Colonial II", cat:"Faroles", stock:10, pMay:16700, pMen:25900, mats:[{id:2121,nombre:"Costo total",qty:1,unidad:"u",costo:8329}] },
-  { id:"203", nombre:"Farol Oriental I", cat:"Faroles", stock:10, pMay:16200, pMen:25100, mats:[{id:2031,nombre:"Costo total",qty:1,unidad:"u",costo:8000}] },
-  { id:"213", nombre:"Farol Oriental II", cat:"Faroles", stock:0, pMay:14950, pMen:23200, mats:[{id:2131,nombre:"Costo total",qty:1,unidad:"u",costo:6806}] },
-  { id:"204", nombre:"Farol Eco I", cat:"Faroles", stock:20, pMay:14950, pMen:23200, mats:[{id:2041,nombre:"Costo total",qty:1,unidad:"u",costo:7459}] },
-  { id:"214", nombre:"Farol Eco II", cat:"Faroles", stock:100, pMay:19900, pMen:30800, mats:[{id:2141,nombre:"Costo total",qty:1,unidad:"u",costo:9585}] },
-  { id:"205", nombre:"Medio Farol I", cat:"Faroles", stock:20, pMay:16200, pMen:25100, mats:[{id:2051,nombre:"Costo total",qty:1,unidad:"u",costo:8000}] },
-  { id:"215", nombre:"Medio Farol II", cat:"Faroles", stock:20, pMay:21100, pMen:32700, mats:[{id:2151,nombre:"Costo total",qty:1,unidad:"u",costo:10532}] },
-  { id:"225", nombre:"Medio Farol III", cat:"Faroles", stock:80, pMay:35000, pMen:54200, mats:[{id:2251,nombre:"Costo total",qty:1,unidad:"u",costo:30000}] },
-  { id:"301", nombre:"Tria Dual", cat:"Direccionales", stock:0, pMay:21900, pMen:33900, mats:[{id:3011,nombre:"Costo total",qty:1,unidad:"u",costo:12390}] },
-  { id:"302", nombre:"Arco Lux", cat:"Direccionales", stock:0, pMay:24500, pMen:37900, mats:[{id:3021,nombre:"Costo total",qty:1,unidad:"u",costo:13790}] },
-  { id:"312", nombre:"Arco", cat:"Direccionales", stock:0, pMay:17900, pMen:27700, mats:[{id:3121,nombre:"Costo total",qty:1,unidad:"u",costo:9672}] },
-  { id:"322", nombre:"Arco Lux One", cat:"Direccionales", stock:0, pMay:21800, pMen:33800, mats:[{id:3221,nombre:"Costo total",qty:1,unidad:"u",costo:12000}] },
-  { id:"332", nombre:"Arco One", cat:"Direccionales", stock:0, pMay:16500, pMen:25600, mats:[{id:3321,nombre:"Costo total",qty:1,unidad:"u",costo:9000}] },
-  { id:"303", nombre:"Línea 3", cat:"Direccionales", stock:0, pMay:21400, pMen:33200, mats:[{id:3031,nombre:"Costo total",qty:1,unidad:"u",costo:12000}] },
-  { id:"304", nombre:"Vectra Dual", cat:"Direccionales", stock:0, pMay:28500, pMen:44200, mats:[{id:3041,nombre:"Costo total",qty:1,unidad:"u",costo:17500}] },
-  { id:"314", nombre:"Vectra", cat:"Direccionales", stock:0, pMay:27100, pMen:42000, mats:[{id:3141,nombre:"Costo total",qty:1,unidad:"u",costo:15500}] },
-  { id:"305", nombre:"Nodo Dual", cat:"Direccionales", stock:0, pMay:20900, pMen:32400, mats:[{id:3051,nombre:"Costo total",qty:1,unidad:"u",costo:10306}] },
-  { id:"315", nombre:"Nodo", cat:"Direccionales", stock:0, pMay:17900, pMen:27700, mats:[{id:3151,nombre:"Costo total",qty:1,unidad:"u",costo:9500}] },
-  { id:"401", nombre:"Cubo Botánico I", cat:"Terrarios", stock:1, pMay:29900, pMen:46400, mats:[] },
-  { id:"411", nombre:"Cubo Botánico II", cat:"Terrarios", stock:1, pMay:29900, pMen:46400, mats:[] },
-  { id:"421", nombre:"Cubo Botánico III", cat:"Terrarios", stock:1, pMay:29900, pMen:46400, mats:[] },
-  { id:"431", nombre:"Cubo Magic Botánico", cat:"Terrarios", stock:1, pMay:32900, pMen:51000, mats:[] },
-  { id:"402", nombre:"Pirámide Botánica", cat:"Terrarios", stock:1, pMay:32700, pMen:50700, mats:[] },
-  { id:"412", nombre:"Pirámide Base Botánica", cat:"Terrarios", stock:1, pMay:33800, pMen:52400, mats:[] },
-  { id:"403", nombre:"Diamante Botánico I", cat:"Terrarios", stock:1, pMay:34600, pMen:53600, mats:[] },
-  { id:"413", nombre:"Diamante Botánico II", cat:"Terrarios", stock:1, pMay:40200, pMen:62300, mats:[] },
-  { id:"404", nombre:"Cápsula Botánica", cat:"Terrarios", stock:1, pMay:40200, pMen:62300, mats:[] },
-  { id:"405", nombre:"Gota Botánica", cat:"Terrarios", stock:1, pMay:43500, pMen:67400, mats:[] },
-  { id:"406", nombre:"Pelota Botánica", cat:"Terrarios", stock:1, pMay:43500, pMen:67400, mats:[] },
-  { id:"407", nombre:"Gema Botánica", cat:"Terrarios", stock:1, pMay:44500, pMen:69000, mats:[] },
-  { id:"501", nombre:"Cubo Sal I", cat:"Sal", stock:1, pMay:39900, pMen:61900, mats:[] },
-  { id:"511", nombre:"Cubo Sal II", cat:"Sal", stock:1, pMay:39900, pMen:61900, mats:[] },
-  { id:"521", nombre:"Cubo Sal III", cat:"Sal", stock:1, pMay:39900, pMen:61900, mats:[] },
-  { id:"531", nombre:"Cubo Magic Sal", cat:"Sal", stock:1, pMay:42700, pMen:66200, mats:[] },
-  { id:"502", nombre:"Pirámide Sal", cat:"Sal", stock:1, pMay:42600, pMen:66000, mats:[] },
-  { id:"512", nombre:"Pirámide Base Sal", cat:"Sal", stock:1, pMay:43100, pMen:66800, mats:[] },
-  { id:"503", nombre:"Diamante Sal I", cat:"Sal", stock:1, pMay:44100, pMen:68400, mats:[] },
-  { id:"513", nombre:"Diamante Sal II", cat:"Sal", stock:1, pMay:48800, pMen:75600, mats:[] },
-  { id:"504", nombre:"Cápsula Sal", cat:"Sal", stock:1, pMay:48800, pMen:75600, mats:[] },
-  { id:"505", nombre:"Gota Sal", cat:"Sal", stock:1, pMay:50300, pMen:78000, mats:[] },
-  { id:"506", nombre:"Pelota Sal", cat:"Sal", stock:1, pMay:50300, pMen:78000, mats:[] },
-  { id:"507", nombre:"Gema Sal", cat:"Sal", stock:1, pMay:52000, pMen:80600, mats:[] },
-  { id:"601", nombre:"Cubo Colgante", cat:"Vitro", stock:1, pMay:38500, pMen:59700, mats:[] },
-  { id:"631", nombre:"Cubo Magic Colgante", cat:"Vitro", stock:1, pMay:42500, pMen:65900, mats:[] },
-  { id:"602", nombre:"Pirámide Colgante", cat:"Vitro", stock:1, pMay:42900, pMen:66500, mats:[] },
-  { id:"612", nombre:"Pirámide Base Colgante", cat:"Vitro", stock:1, pMay:43400, pMen:67300, mats:[] },
-  { id:"603", nombre:"Diamante Colgante I", cat:"Vitro", stock:1, pMay:44600, pMen:69100, mats:[] },
-  { id:"613", nombre:"Diamante Colgante II", cat:"Vitro", stock:1, pMay:50500, pMen:78300, mats:[] },
-  { id:"604", nombre:"Cápsula Colgante", cat:"Vitro", stock:1, pMay:50500, pMen:78300, mats:[] },
-  { id:"605", nombre:"Gota Colgante", cat:"Vitro", stock:1, pMay:52300, pMen:81000, mats:[] },
-  { id:"606", nombre:"Pelota Colgante", cat:"Vitro", stock:1, pMay:52300, pMen:81000, mats:[] },
-  { id:"607", nombre:"Gema Colgante", cat:"Vitro", stock:1, pMay:54900, pMen:85100, mats:[] },
-  { id:"608", nombre:"Tulipa Colgante", cat:"Vitro", stock:1, pMay:42500, pMen:65900, mats:[] },
-  { id:"701", nombre:"Fanal 10×10×22 Sin Vidrio", cat:"Fanales", stock:1, pMay:21900, pMen:33900, mats:[] },
-  { id:"702", nombre:"Fanal 12×12×27 Sin Vidrio", cat:"Fanales", stock:1, pMay:24400, pMen:37800, mats:[] },
-  { id:"703", nombre:"Fanal 13×13×32 Sin Vidrio", cat:"Fanales", stock:1, pMay:28900, pMen:44800, mats:[] },
-  { id:"711", nombre:"Fanal 10×10×22 Con Vidrio", cat:"Fanales", stock:1, pMay:23400, pMen:36300, mats:[] },
-  { id:"712", nombre:"Fanal 12×12×27 Con Vidrio", cat:"Fanales", stock:1, pMay:28400, pMen:44000, mats:[] },
-  { id:"713", nombre:"Fanal 13×13×32 Con Vidrio", cat:"Fanales", stock:1, pMay:32900, pMen:51000, mats:[] },
-  { id:"721", nombre:"Fanal 10×10×22 Vidrio Color", cat:"Fanales", stock:1, pMay:26400, pMen:40900, mats:[] },
-  { id:"722", nombre:"Fanal 12×12×27 Vidrio Color", cat:"Fanales", stock:1, pMay:32800, pMen:50800, mats:[] },
-  { id:"723", nombre:"Fanal 13×13×32 Vidrio Color", cat:"Fanales", stock:150, pMay:38700, pMen:60000, mats:[] },
-  { id:"801", nombre:"Pentágono", cat:"Geometría", stock:1, pMay:27900, pMen:43200, mats:[] },
-  { id:"802", nombre:"Estrella Cardinal", cat:"Geometría", stock:1, pMay:33300, pMen:51600, mats:[] },
-  { id:"803", nombre:"Orbe", cat:"Geometría", stock:1, pMay:37900, pMen:58700, mats:[] },
-  { id:"804", nombre:"Gema", cat:"Geometría", stock:1, pMay:51000, pMen:74000, mats:[] },
-  { id:"805", nombre:"Estrella Tetraédrica", cat:"Geometría", stock:1, pMay:38500, pMen:59700, mats:[] },
-  { id:"806", nombre:"Axial", cat:"Geometría", stock:1, pMay:22700, pMen:35200, mats:[] },
-  { id:"807", nombre:"Semilla", cat:"Geometría", stock:1, pMay:17400, pMen:26900, mats:[] },
-];
+<div class="header">
+  <h1>enkki</h1>
+  <span>GESTIÓN</span>
+</div>
 
-const CATS = ["Pantallas","Faroles","Direccionales","Terrarios","Sal","Vitro","Fanales","Geometría"];
-const GOLD = "#c9a84c";
-const fmt = n => "$" + Number(n).toLocaleString("es-AR");
+<div class="content" id="content"></div>
 
-// ── SUPABASE CONFIG ──────────────────────────────────────────────────────────
+<nav class="nav">
+  <button class="active" onclick="showTab('stock')"><span class="ico">📦</span>Stock</button>
+  <button onclick="showTab('vender')"><span class="ico">🛒</span>Vender</button>
+  <button onclick="showTab('costos')"><span class="ico">💲</span>Costos</button>
+  <button onclick="showTab('historial')"><span class="ico">📋</span>Historial</button>
+</nav>
+
+<script>
 const SUPA_URL = "https://mnpxqfuniizefnkzhszy.supabase.co";
 const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ucHhxZnVuaWl6ZWZua3poc3p5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMjQwMDksImV4cCI6MjA5NDkwMDAwOX0.jsJ4dg0r0jQv2pEPPosoeM1eXlS1m5k2xy3CiATRPBU";
+const H = {"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+SUPA_KEY};
+const fmt = n => "$" + Number(n).toLocaleString("es-AR");
 
-const headers = {
-  "Content-Type": "application/json",
-  "apikey": SUPA_KEY,
-  "Authorization": "Bearer " + SUPA_KEY,
-  "Prefer": "return=minimal"
+const COSTOS_FIJOS = {
+  "200":8329,"210":11000,"201":8329,"211":12333,"221":36071,
+  "202":8000,"212":8329,"203":8000,"213":6806,"204":7459,
+  "214":9585,"205":8000,"215":10532,"225":30000,
+  "301":12390,"302":13790,"312":9672,"322":12000,"332":9000,
+  "303":12000,"304":17500,"314":15500,"305":10306,"315":9500
 };
 
-async function cargarDatos() {
+const PRODS = [
+  {id:"102",n:"Outline II",cat:"Pantallas",stock:500,pMay:17000,pMen:26500},
+  {id:"103",n:"Outline III",cat:"Pantallas",stock:400,pMay:18500,pMen:28700},
+  {id:"200",n:"Farol Mini",cat:"Faroles",stock:0,pMay:16000,pMen:25000},
+  {id:"210",n:"Farol Mini Vidrio Color",cat:"Faroles",stock:0,pMay:20600,pMen:31900},
+  {id:"201",n:"Farol Hexágono I",cat:"Faroles",stock:0,pMay:16700,pMen:25900},
+  {id:"211",n:"Farol Hexágono II",cat:"Faroles",stock:0,pMay:21800,pMen:33800},
+  {id:"221",n:"Farol Hexágono III",cat:"Faroles",stock:0,pMay:55000,pMen:85300},
+  {id:"202",n:"Farol Colonial I",cat:"Faroles",stock:20,pMay:16200,pMen:25100},
+  {id:"212",n:"Farol Colonial II",cat:"Faroles",stock:10,pMay:16700,pMen:25900},
+  {id:"203",n:"Farol Oriental I",cat:"Faroles",stock:10,pMay:16200,pMen:25100},
+  {id:"213",n:"Farol Oriental II",cat:"Faroles",stock:0,pMay:14950,pMen:23200},
+  {id:"204",n:"Farol Eco I",cat:"Faroles",stock:20,pMay:14950,pMen:23200},
+  {id:"214",n:"Farol Eco II",cat:"Faroles",stock:100,pMay:19900,pMen:30800},
+  {id:"205",n:"Medio Farol I",cat:"Faroles",stock:20,pMay:16200,pMen:25100},
+  {id:"215",n:"Medio Farol II",cat:"Faroles",stock:20,pMay:21100,pMen:32700},
+  {id:"225",n:"Medio Farol III",cat:"Faroles",stock:80,pMay:35000,pMen:54200},
+  {id:"301",n:"Tria Dual",cat:"Direccionales",stock:0,pMay:21900,pMen:33900},
+  {id:"302",n:"Arco Lux",cat:"Direccionales",stock:0,pMay:24500,pMen:37900},
+  {id:"312",n:"Arco",cat:"Direccionales",stock:0,pMay:17900,pMen:27700},
+  {id:"322",n:"Arco Lux One",cat:"Direccionales",stock:0,pMay:21800,pMen:33800},
+  {id:"332",n:"Arco One",cat:"Direccionales",stock:0,pMay:16500,pMen:25600},
+  {id:"303",n:"Línea 3",cat:"Direccionales",stock:0,pMay:21400,pMen:33200},
+  {id:"304",n:"Vectra Dual",cat:"Direccionales",stock:0,pMay:28500,pMen:44200},
+  {id:"314",n:"Vectra",cat:"Direccionales",stock:0,pMay:27100,pMen:42000},
+  {id:"305",n:"Nodo Dual",cat:"Direccionales",stock:0,pMay:20900,pMen:32400},
+  {id:"315",n:"Nodo",cat:"Direccionales",stock:0,pMay:17900,pMen:27700},
+  {id:"401",n:"Cubo Botánico I",cat:"Terrarios",stock:1,pMay:29900,pMen:46400},
+  {id:"411",n:"Cubo Botánico II",cat:"Terrarios",stock:1,pMay:29900,pMen:46400},
+  {id:"421",n:"Cubo Botánico III",cat:"Terrarios",stock:1,pMay:29900,pMen:46400},
+  {id:"431",n:"Cubo Magic Botánico",cat:"Terrarios",stock:1,pMay:32900,pMen:51000},
+  {id:"402",n:"Pirámide Botánica",cat:"Terrarios",stock:1,pMay:32700,pMen:50700},
+  {id:"412",n:"Pirámide Base Botánica",cat:"Terrarios",stock:1,pMay:33800,pMen:52400},
+  {id:"403",n:"Diamante Botánico I",cat:"Terrarios",stock:1,pMay:34600,pMen:53600},
+  {id:"413",n:"Diamante Botánico II",cat:"Terrarios",stock:1,pMay:40200,pMen:62300},
+  {id:"404",n:"Cápsula Botánica",cat:"Terrarios",stock:1,pMay:40200,pMen:62300},
+  {id:"405",n:"Gota Botánica",cat:"Terrarios",stock:1,pMay:43500,pMen:67400},
+  {id:"406",n:"Pelota Botánica",cat:"Terrarios",stock:1,pMay:43500,pMen:67400},
+  {id:"407",n:"Gema Botánica",cat:"Terrarios",stock:1,pMay:44500,pMen:69000},
+  {id:"501",n:"Cubo Sal I",cat:"Sal",stock:1,pMay:39900,pMen:61900},
+  {id:"511",n:"Cubo Sal II",cat:"Sal",stock:1,pMay:39900,pMen:61900},
+  {id:"521",n:"Cubo Sal III",cat:"Sal",stock:1,pMay:39900,pMen:61900},
+  {id:"531",n:"Cubo Magic Sal",cat:"Sal",stock:1,pMay:42700,pMen:66200},
+  {id:"502",n:"Pirámide Sal",cat:"Sal",stock:1,pMay:42600,pMen:66000},
+  {id:"512",n:"Pirámide Base Sal",cat:"Sal",stock:1,pMay:43100,pMen:66800},
+  {id:"503",n:"Diamante Sal I",cat:"Sal",stock:1,pMay:44100,pMen:68400},
+  {id:"513",n:"Diamante Sal II",cat:"Sal",stock:1,pMay:48800,pMen:75600},
+  {id:"504",n:"Cápsula Sal",cat:"Sal",stock:1,pMay:48800,pMen:75600},
+  {id:"505",n:"Gota Sal",cat:"Sal",stock:1,pMay:50300,pMen:78000},
+  {id:"506",n:"Pelota Sal",cat:"Sal",stock:1,pMay:50300,pMen:78000},
+  {id:"507",n:"Gema Sal",cat:"Sal",stock:1,pMay:52000,pMen:80600},
+  {id:"601",n:"Cubo Colgante",cat:"Vitro",stock:1,pMay:38500,pMen:59700},
+  {id:"631",n:"Cubo Magic Colgante",cat:"Vitro",stock:1,pMay:42500,pMen:65900},
+  {id:"602",n:"Pirámide Colgante",cat:"Vitro",stock:1,pMay:42900,pMen:66500},
+  {id:"612",n:"Pirámide Base Colgante",cat:"Vitro",stock:1,pMay:43400,pMen:67300},
+  {id:"603",n:"Diamante Colgante I",cat:"Vitro",stock:1,pMay:44600,pMen:69100},
+  {id:"613",n:"Diamante Colgante II",cat:"Vitro",stock:1,pMay:50500,pMen:78300},
+  {id:"604",n:"Cápsula Colgante",cat:"Vitro",stock:1,pMay:50500,pMen:78300},
+  {id:"605",n:"Gota Colgante",cat:"Vitro",stock:1,pMay:52300,pMen:81000},
+  {id:"606",n:"Pelota Colgante",cat:"Vitro",stock:1,pMay:52300,pMen:81000},
+  {id:"607",n:"Gema Colgante",cat:"Vitro",stock:1,pMay:54900,pMen:85100},
+  {id:"608",n:"Tulipa Colgante",cat:"Vitro",stock:1,pMay:42500,pMen:65900},
+  {id:"701",n:"Fanal Sin Vidrio S",cat:"Fanales",stock:1,pMay:21900,pMen:33900},
+  {id:"702",n:"Fanal Sin Vidrio M",cat:"Fanales",stock:1,pMay:24400,pMen:37800},
+  {id:"703",n:"Fanal Sin Vidrio L",cat:"Fanales",stock:1,pMay:28900,pMen:44800},
+  {id:"711",n:"Fanal Con Vidrio S",cat:"Fanales",stock:1,pMay:23400,pMen:36300},
+  {id:"712",n:"Fanal Con Vidrio M",cat:"Fanales",stock:1,pMay:28400,pMen:44000},
+  {id:"713",n:"Fanal Con Vidrio L",cat:"Fanales",stock:1,pMay:32900,pMen:51000},
+  {id:"721",n:"Fanal Vidrio Color S",cat:"Fanales",stock:1,pMay:26400,pMen:40900},
+  {id:"722",n:"Fanal Vidrio Color M",cat:"Fanales",stock:1,pMay:32800,pMen:50800},
+  {id:"723",n:"Fanal Vidrio Color L",cat:"Fanales",stock:150,pMay:38700,pMen:60000},
+  {id:"801",n:"Pentágono",cat:"Geometría",stock:1,pMay:27900,pMen:43200},
+  {id:"802",n:"Estrella Cardinal",cat:"Geometría",stock:1,pMay:33300,pMen:51600},
+  {id:"803",n:"Orbe",cat:"Geometría",stock:1,pMay:37900,pMen:58700},
+  {id:"804",n:"Gema",cat:"Geometría",stock:1,pMay:51000,pMen:74000},
+  {id:"805",n:"Estrella Tetraédrica",cat:"Geometría",stock:1,pMay:38500,pMen:59700},
+  {id:"806",n:"Axial",cat:"Geometría",stock:1,pMay:22700,pMen:35200},
+  {id:"807",n:"Semilla",cat:"Geometría",stock:1,pMay:17400,pMen:26900}
+];
+
+// STATE
+let state = { productos: [], ventas: [], loading: true };
+let carrito = [];
+let canal = "men";
+let tabActual = "stock";
+let catActiva = "Pantallas";
+let editando = null;
+let selCosto = null;
+let busqStock = "";
+let busqVender = "";
+let busqCosto = "";
+
+// SUPABASE
+async function cargar() {
   try {
-    const res = await fetch(SUPA_URL + "/rest/v1/enkki_datos?id=eq.main&select=productos,ventas", { headers });
-    const json = await res.json();
-    if (json && json[0] && json[0].productos && json[0].productos.length > 0) {
-      const saved = { productos: json[0].productos, ventas: json[0].ventas || [] };
-      // Sincronizar costos precargados
-      saved.productos = saved.productos.map(p => {
-        const ini = PRODUCTOS_INICIALES.find(x => x.id === p.id);
-        if (!ini || ini.mats.length === 0) return p;
-        const matsUsuario = p.mats.filter(m => m.id > 100000);
-        return { ...p, mats: [...ini.mats, ...matsUsuario] };
-      });
-      return saved;
+    const r = await fetch(SUPA_URL+"/rest/v1/enkki_datos?id=eq.main&select=productos,ventas", {headers:H});
+    const j = await r.json();
+    if (j && j[0] && j[0].productos && j[0].productos.length > 0) {
+      state.productos = j[0].productos;
+      state.ventas = j[0].ventas || [];
+      // Aplicar costos fijos
+      state.productos = state.productos.map(p => ({...p, costoFijo: COSTOS_FIJOS[p.id] || p.costoFijo || 0}));
+      state.loading = false;
+      render();
+      return;
     }
-  } catch(e) { console.log("Error Supabase:", e); }
-  return { productos: PRODUCTOS_INICIALES, ventas: [] };
+  } catch(e) {}
+  // Inicializar con datos base
+  state.productos = PRODS.map(p => ({...p, costoFijo: COSTOS_FIJOS[p.id] || 0, mats:[]}));
+  state.ventas = [];
+  state.loading = false;
+  await guardar();
+  render();
 }
 
-async function guardarDatos(data) {
+async function guardar() {
   try {
-    await fetch(SUPA_URL + "/rest/v1/enkki_datos?id=eq.main", {
-      method: "PATCH",
-      headers,
-      body: JSON.stringify({ productos: data.productos, ventas: data.ventas, updated_at: new Date().toISOString() })
+    await fetch(SUPA_URL+"/rest/v1/enkki_datos?id=eq.main", {
+      method:"PATCH", headers:H,
+      body: JSON.stringify({productos:state.productos, ventas:state.ventas, updated_at:new Date().toISOString()})
     });
-    // Si no existe aún, crear
-    const res = await fetch(SUPA_URL + "/rest/v1/enkki_datos?id=eq.main&select=id", { headers });
-    const rows = await res.json();
-    if (!rows || rows.length === 0) {
-      await fetch(SUPA_URL + "/rest/v1/enkki_datos", {
-        method: "POST",
-        headers: { ...headers, "Prefer": "return=minimal" },
-        body: JSON.stringify({ id: "main", productos: data.productos, ventas: data.ventas })
-      });
+    const chk = await fetch(SUPA_URL+"/rest/v1/enkki_datos?id=eq.main&select=id",{headers:H});
+    const rows = await chk.json();
+    if (!rows || rows.length===0) {
+      await fetch(SUPA_URL+"/rest/v1/enkki_datos",{method:"POST",headers:{...H,"Prefer":"return=minimal"},body:JSON.stringify({id:"main",productos:state.productos,ventas:state.ventas})});
     }
-  } catch(e) { console.log("Error guardando:", e); }
+  } catch(e) {}
 }
 
-// ── ESTILOS BASE ─────────────────────────────────────────────────────────────
-const S = {
-  card: { background:"#1c1c1c", border:"1px solid #2a2a2a", borderRadius:14, padding:"12px 14px" },
-  input: { width:"100%", background:"#242424", border:"1px solid #333", borderRadius:10, padding:"10px 13px", color:"#f0e0c0", fontSize:15, boxSizing:"border-box", outline:"none" },
-  btnGold: { background:GOLD, color:"#111", border:"none", borderRadius:11, padding:"13px", fontSize:15, fontWeight:700, cursor:"pointer", width:"100%" },
-  btnDark: { background:"#2a2a2a", color:"#888", border:"none", borderRadius:11, padding:"13px", fontSize:14, cursor:"pointer" },
-  label: { color:"#666", fontSize:11, letterSpacing:1, textTransform:"uppercase", display:"block", marginBottom:5 },
-};
+// RENDER
+function render() {
+  const c = document.getElementById("content");
+  if (state.loading) { c.innerHTML = '<div style="text-align:center;padding:60px;color:#c9a84c;font-family:Georgia,serif;font-size:20px">Cargando...</div>'; return; }
+  if (tabActual==="stock") c.innerHTML = renderStock();
+  else if (tabActual==="vender") c.innerHTML = renderVender();
+  else if (tabActual==="costos") c.innerHTML = renderCostos();
+  else c.innerHTML = renderHistorial();
+}
 
-// ── MODAL ────────────────────────────────────────────────────────────────────
-function Modal({ title, onClose, children }) {
-  return (
-    <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.8)", zIndex:200, display:"flex", alignItems:"flex-end" }}>
-      <div style={{ background:"#181818", borderRadius:"18px 18px 0 0", width:"100%", maxHeight:"88vh", overflowY:"auto", padding:"22px 18px 36px" }}>
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:18 }}>
-          <span style={{ fontFamily:"Georgia,serif", fontSize:17, color:"#f0e0c0", fontWeight:700 }}>{title}</span>
-          <button onClick={onClose} style={{ background:"#2a2a2a", border:"none", borderRadius:8, padding:"6px 11px", color:"#888", cursor:"pointer", fontSize:16 }}>✕</button>
+// STOCK
+function renderStock() {
+  const cats = ["Pantallas","Faroles","Direccionales","Terrarios","Sal","Vitro","Fanales","Geometría"];
+  const total = state.productos.reduce((s,p)=>s+p.stock*p.pMen,0);
+  const lista = busqStock.length>1
+    ? state.productos.filter(p=>p.n.toLowerCase().includes(busqStock.toLowerCase())||p.id.includes(busqStock))
+    : state.productos.filter(p=>p.cat===catActiva);
+
+  return `
+  <div class="total-box">
+    <div style="color:#c9a84c;font-size:10px;letter-spacing:2px">VALOR TOTAL STOCK (MINORISTA)</div>
+    <div style="color:#f0e0c0;font-size:24px;font-family:Georgia,serif;font-weight:700;margin-top:3px">${fmt(total)}</div>
+  </div>
+  <input type="search" placeholder="🔍 Buscar producto o código..." value="${busqStock}" oninput="busqStock=this.value;render()" style="margin-bottom:12px">
+  ${busqStock.length<2?`<div class="cats">${cats.map(c=>`<button class="cat-btn${c===catActiva?' active':''}" onclick="catActiva='${c}';render()">${c}</button>`).join('')}</div>`:''}
+  ${lista.map(p=>{
+    const alerta = p.stock===0;
+    const bajo = p.stock>0&&p.stock<=5;
+    return `<div class="card${alerta?' alert':bajo?' warn':''}">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="flex:1">
+          <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px">
+            <span class="tag" style="background:#2a2a2a;color:#c9a84c">${p.id}</span>
+            ${alerta?'<span class="tag" style="background:#c0392b22;color:#e74c3c">SIN STOCK</span>':''}
+            ${bajo?'<span class="tag" style="background:#c9a84c22;color:#c9a84c">POCO</span>':''}
+          </div>
+          <div style="font-size:14px;font-weight:600;margin-bottom:3px">${p.n}</div>
+          <div style="font-size:12px;color:#666">May: <span style="color:#aaa">${fmt(p.pMay)}</span> &nbsp; Men: <span style="color:#c9a84c">${fmt(p.pMen)}</span></div>
         </div>
-        {children}
-      </div>
-    </div>
-  );
-}
-
-// ── TAB STOCK ────────────────────────────────────────────────────────────────
-function TabStock({ data, setData, guardar }) {
-  const [cat, setCat] = useState("Pantallas");
-  const [q, setQ] = useState("");
-  const [edit, setEdit] = useState(null);
-  const [form, setForm] = useState({});
-
-  const lista = data.productos.filter(p =>
-    (q ? p.nombre.toLowerCase().includes(q.toLowerCase()) || p.id.includes(q) : p.cat === cat)
-  );
-
-  const totalStock = data.productos.reduce((s, p) => s + p.stock * p.pMen, 0);
-
-  function abrirEdit(p) { setEdit(p.id); setForm({ stock: p.stock, pMay: p.pMay, pMen: p.pMen }); }
-
-  function guardarEdit() {
-    const np = data.productos.map(p => p.id === edit ? { ...p, stock: +form.stock, pMay: +form.pMay, pMen: +form.pMen } : p);
-    const nd = { ...data, productos: np };
-    setData(nd); guardar(nd); setEdit(null);
-  }
-
-  return (
-    <div>
-      {/* Banner total */}
-      <div style={{ background:"linear-gradient(135deg,#2a1c08,#1a1a1a)", border:"1px solid #c9a84c22", borderRadius:14, padding:"14px 18px", marginBottom:14 }}>
-        <div style={{ color:GOLD, fontSize:10, letterSpacing:2 }}>VALOR TOTAL STOCK (MINORISTA)</div>
-        <div style={{ color:"#f0e0c0", fontSize:24, fontFamily:"Georgia,serif", fontWeight:700, marginTop:3 }}>{fmt(totalStock)}</div>
-      </div>
-
-      {/* Buscar */}
-      <input value={q} onChange={e => setQ(e.target.value)} placeholder="🔍  Buscar por nombre o código..." style={{ ...S.input, marginBottom:12 }} />
-
-      {/* Cats */}
-      {!q && (
-        <div style={{ display:"flex", gap:7, overflowX:"auto", paddingBottom:8, marginBottom:12 }}>
-          {CATS.map(c => (
-            <button key={c} onClick={() => setCat(c)} style={{ flexShrink:0, padding:"5px 13px", borderRadius:18, border:"none", cursor:"pointer", fontSize:12, fontWeight:600, background: cat===c ? GOLD : "#222", color: cat===c ? "#111" : "#666" }}>{c}</button>
-          ))}
+        <div style="display:flex;align-items:center;gap:10px;margin-left:10px">
+          <div style="text-align:center">
+            <div style="font-size:22px;font-weight:800;color:${alerta?'#e74c3c':bajo?'#c9a84c':'#f0e0c0'};font-family:Georgia,serif">${p.stock}</div>
+            <div style="font-size:9px;color:#444">uds</div>
+          </div>
+          <button class="btn-sm" onclick="abrirEdit('${p.id}')">✏️</button>
         </div>
-      )}
-
-      {/* Lista */}
-      <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-        {lista.map(p => {
-          const alerta = p.stock === 0;
-          const bajo = p.stock > 0 && p.stock <= 5;
-          return (
-            <div key={p.id} style={{ ...S.card, borderColor: alerta ? "#c0392b33" : bajo ? "#c9a84c33" : "#2a2a2a", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-              <div style={{ flex:1 }}>
-                <div style={{ display:"flex", gap:6, alignItems:"center", marginBottom:4 }}>
-                  <span style={{ background:"#2a2a2a", color:GOLD, fontSize:10, padding:"2px 7px", borderRadius:5, fontWeight:700 }}>{p.id}</span>
-                  {alerta && <span style={{ background:"#c0392b22", color:"#e74c3c", fontSize:9, padding:"2px 6px", borderRadius:4 }}>SIN STOCK</span>}
-                  {bajo && <span style={{ background:"#c9a84c22", color:GOLD, fontSize:9, padding:"2px 6px", borderRadius:4 }}>POCO</span>}
-                </div>
-                <div style={{ color:"#f0e0c0", fontSize:14, fontWeight:600, marginBottom:3 }}>{p.nombre}</div>
-                <div style={{ fontSize:12, color:"#666" }}>May: <span style={{ color:"#aaa" }}>{fmt(p.pMay)}</span> &nbsp; Men: <span style={{ color:GOLD }}>{fmt(p.pMen)}</span></div>
-              </div>
-              <div style={{ display:"flex", alignItems:"center", gap:10, marginLeft:10 }}>
-                <div style={{ textAlign:"center" }}>
-                  <div style={{ fontSize:22, fontWeight:800, color: alerta ? "#e74c3c" : bajo ? GOLD : "#f0e0c0", fontFamily:"Georgia,serif" }}>{p.stock}</div>
-                  <div style={{ fontSize:9, color:"#444", textTransform:"uppercase" }}>uds</div>
-                </div>
-                <button onClick={() => abrirEdit(p)} style={{ background:"#2a2a2a", border:"none", borderRadius:8, padding:"8px 9px", color:GOLD, cursor:"pointer", fontSize:14 }}>✏️</button>
-              </div>
-            </div>
-          );
-        })}
       </div>
-
-      {edit && (() => {
-        const p = data.productos.find(x => x.id === edit);
-        return (
-          <Modal title={`${p.id} — ${p.nombre}`} onClose={() => setEdit(null)}>
-            {[["Stock","stock"],["Precio mayorista","pMay"],["Precio minorista","pMen"]].map(([lb, k]) => (
-              <div key={k} style={{ marginBottom:13 }}>
-                <label style={S.label}>{lb}</label>
-                <input type="number" value={form[k]} onChange={e => setForm(f => ({ ...f, [k]: e.target.value }))} style={S.input} />
-              </div>
-            ))}
-            <button onClick={guardarEdit} style={S.btnGold}>Guardar</button>
-          </Modal>
-        );
-      })()}
-    </div>
-  );
+    </div>`;
+  }).join('')}
+  ${editando?renderModalEdit():''}`;
 }
 
-// ── TAB VENDER ───────────────────────────────────────────────────────────────
-function TabVender({ data, setData, guardar }) {
-  const [q, setQ] = useState("");
-  const [carrito, setCarrito] = useState([]);
-  const [canal, setCanal] = useState("men");
-  const [confirmando, setConfirmando] = useState(false);
-  const [ok, setOk] = useState(false);
-
-  const sugerencias = q.length >= 2 ? data.productos.filter(p =>
-    p.nombre.toLowerCase().includes(q.toLowerCase()) || p.id.includes(q)
-  ).slice(0, 5) : [];
-
-  function agregar(p) {
-    setQ("");
-    setCarrito(prev => {
-      const ex = prev.find(c => c.id === p.id);
-      return ex ? prev.map(c => c.id === p.id ? { ...c, qty: c.qty + 1 } : c) : [...prev, { ...p, qty: 1 }];
-    });
-  }
-
-  function qty(id, d) { setCarrito(prev => prev.map(c => c.id === id ? { ...c, qty: Math.max(0, c.qty + d) } : c).filter(c => c.qty > 0)); }
-
-  const total = carrito.reduce((s, c) => s + c.qty * (canal === "men" ? c.pMen : c.pMay), 0);
-
-  function confirmar() {
-    const venta = {
-      id: Date.now(),
-      fecha: new Date().toLocaleDateString("es-AR"),
-      hora: new Date().toLocaleTimeString("es-AR", { hour:"2-digit", minute:"2-digit" }),
-      canal,
-      items: carrito.map(c => ({ id:c.id, nombre:c.nombre, qty:c.qty, precio: canal === "men" ? c.pMen : c.pMay })),
-      total,
-    };
-    const np = data.productos.map(p => {
-      const item = carrito.find(c => c.id === p.id);
-      return item ? { ...p, stock: Math.max(0, p.stock - item.qty) } : p;
-    });
-    const nd = { ...data, productos: np, ventas: [venta, ...data.ventas] };
-    setData(nd); guardar(nd); setCarrito([]); setConfirmando(false);
-    setOk(true); setTimeout(() => setOk(false), 3000);
-  }
-
-  function generarWhatsApp() {
-    const fecha = new Date().toLocaleDateString("es-AR");
-    const canalTexto = canal === "men" ? "Minorista" : "Mayorista";
-    let msg = "";
-    msg += "✨ *ENKKI* — Iluminación & Decoración\n";
-    msg += "━━━━━━━━━━━━━━━━━━\n\n";
-    msg += `📋 *Presupuesto ${canalTexto}*\n`;
-    msg += `📅 ${fecha}\n\n`;
-    msg += "*Detalle del pedido:*\n";
-    carrito.forEach(c => {
-      const precio = canal === "men" ? c.pMen : c.pMay;
-      msg += `• ${c.qty}× ${c.nombre} — $${(precio * c.qty).toLocaleString("es-AR")}\n`;
-    });
-    msg += "\n━━━━━━━━━━━━━━━━━━\n";
-    msg += `💰 *TOTAL: $${total.toLocaleString("es-AR")}*\n`;
-    msg += "━━━━━━━━━━━━━━━━━━\n\n";
-    msg += "🔦 Fabricación artesanal en chapa y vidrio\n";
-    msg += "📱 3415824371\n";
-    msg += "🌐 enkki-catalogo.netlify.app\n\n";
-    msg += "_La antítesis del plástico_ 🖤";
-    const url = "https://wa.me/?text=" + encodeURIComponent(msg);
-    window.open(url, "_blank");
-  }
-
-  return (
-    <div>
-      {ok && <div style={{ background:"#1a3a1a", border:"1px solid #27ae60", borderRadius:10, padding:"11px 14px", marginBottom:14, color:"#27ae60", fontWeight:600, fontSize:14 }}>✓ Venta registrada — stock actualizado</div>}
-
-      <div style={{ display:"flex", gap:8, marginBottom:14 }}>
-        {[["men","🏠 Minorista"],["may","📦 Mayorista"]].map(([v, lb]) => (
-          <button key={v} onClick={() => setCanal(v)} style={{ flex:1, padding:"10px", borderRadius:10, border:"none", cursor:"pointer", fontWeight:700, fontSize:13, background: canal===v ? GOLD : "#222", color: canal===v ? "#111" : "#666" }}>{lb}</button>
-        ))}
-      </div>
-
-      <div style={{ position:"relative", marginBottom:14 }}>
-        <input value={q} onChange={e => setQ(e.target.value)} placeholder="Buscar producto para agregar..." style={S.input} />
-        {sugerencias.length > 0 && (
-          <div style={{ position:"absolute", top:"105%", left:0, right:0, background:"#1e1e1e", border:"1px solid #333", borderRadius:10, zIndex:10, overflow:"hidden" }}>
-            {sugerencias.map(p => (
-              <button key={p.id} onClick={() => agregar(p)} style={{ width:"100%", background:"transparent", border:"none", borderBottom:"1px solid #2a2a2a", padding:"10px 13px", color:"#f0e0c0", cursor:"pointer", textAlign:"left", display:"flex", justifyContent:"space-between" }}>
-                <span><span style={{ color:GOLD, fontSize:11, marginRight:6 }}>{p.id}</span>{p.nombre}</span>
-                <span style={{ color:"#555", fontSize:12 }}>stock: {p.stock}</span>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {carrito.length === 0 ? (
-        <div style={{ textAlign:"center", color:"#444", padding:"50px 0", fontSize:14 }}>Buscá un producto para empezar la venta</div>
-      ) : (
-        <>
-          <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:14 }}>
-            {carrito.map(c => {
-              const precio = canal === "men" ? c.pMen : c.pMay;
-              const stockReal = data.productos.find(p => p.id === c.id)?.stock ?? 0;
-              const sinStock = c.qty > stockReal;
-              return (
-                <div key={c.id} style={{ ...S.card, borderColor: sinStock ? "#c0392b44" : "#2a2a2a" }}>
-                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-                    <div><span style={{ color:GOLD, fontSize:11 }}>{c.id}</span> <span style={{ color:"#f0e0c0", fontSize:14, fontWeight:600 }}>{c.nombre}</span></div>
-                    <span style={{ color:GOLD, fontWeight:700 }}>{fmt(precio * c.qty)}</span>
-                  </div>
-                  {sinStock && <div style={{ color:"#e74c3c", fontSize:11, marginTop:3 }}>⚠ Stock insuficiente (hay {stockReal})</div>}
-                  <div style={{ display:"flex", alignItems:"center", gap:10, marginTop:9 }}>
-                    <button onClick={() => qty(c.id, -1)} style={{ background:"#2a2a2a", border:"none", borderRadius:7, width:30, height:30, color:"#f0e0c0", fontSize:18, cursor:"pointer" }}>−</button>
-                    <span style={{ color:"#f0e0c0", fontWeight:700, minWidth:28, textAlign:"center" }}>{c.qty}</span>
-                    <button onClick={() => qty(c.id, 1)} style={{ background:"#2a2a2a", border:"none", borderRadius:7, width:30, height:30, color:"#f0e0c0", fontSize:18, cursor:"pointer" }}>+</button>
-                    <span style={{ color:"#555", fontSize:12 }}>{fmt(precio)} c/u</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          <div style={{ background:"#1e1407", border:"1px solid #c9a84c33", borderRadius:12, padding:"13px 16px", marginBottom:12, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-            <span style={{ color:"#888" }}>Total {canal === "men" ? "minorista" : "mayorista"}</span>
-            <span style={{ color:GOLD, fontSize:22, fontWeight:700, fontFamily:"Georgia,serif" }}>{fmt(total)}</span>
-          </div>
-
-          <div style={{ display:"flex", gap:10, marginBottom:10 }}>
-            <button onClick={() => setCarrito([])} style={{ ...S.btnDark, flex:1 }}>Cancelar</button>
-            <button onClick={() => setConfirmando(true)} style={{ ...S.btnGold, flex:2 }}>Registrar venta</button>
-          </div>
-          <button onClick={generarWhatsApp} style={{ width:"100%", background:"#1a3a1a", color:"#25d366", border:"1px solid #25d36644", borderRadius:11, padding:"13px", fontSize:15, fontWeight:700, cursor:"pointer" }}>
-            💬 Enviar presupuesto por WhatsApp
-          </button>
-        </>
-      )}
-
-      {confirmando && (
-        <Modal title="Confirmar venta" onClose={() => setConfirmando(false)}>
-          <p style={{ color:"#888", fontSize:14, marginBottom:14 }}>
-            {carrito.reduce((s,c)=>s+c.qty,0)} productos · <strong style={{ color:GOLD }}>{fmt(total)}</strong> · El stock se descuenta automáticamente.
-          </p>
-          {carrito.map(c => (
-            <div key={c.id} style={{ display:"flex", justifyContent:"space-between", color:"#aaa", fontSize:13, marginBottom:5 }}>
-              <span>{c.qty}× {c.nombre}</span>
-              <span>{fmt((canal==="men"?c.pMen:c.pMay)*c.qty)}</span>
-            </div>
-          ))}
-          <button onClick={confirmar} style={{ ...S.btnGold, marginTop:18 }}>✓ Confirmar y descontar stock</button>
-        </Modal>
-      )}
+function renderModalEdit() {
+  const p = state.productos.find(x=>x.id===editando);
+  if(!p) return '';
+  return `<div class="modal-bg" onclick="if(event.target===this)editando=null,render()">
+    <div class="modal">
+      <h3>${p.id} — ${p.n}</h3>
+      <label class="label">Stock actual</label>
+      <input type="number" id="e_stock" value="${p.stock}">
+      <label class="label">Precio mayorista</label>
+      <input type="number" id="e_pmay" value="${p.pMay}">
+      <label class="label">Precio minorista</label>
+      <input type="number" id="e_pmen" value="${p.pMen}">
+      <br><br>
+      <button class="btn-gold" onclick="guardarEdit('${p.id}')">Guardar</button>
     </div>
-  );
+  </div>`;
 }
 
-// ── TAB COSTOS ───────────────────────────────────────────────────────────────
-function TabCostos({ data, setData, guardar }) {
-  const [sel, setSel] = useState(null);
-  const [q, setQ] = useState("");
-  const [mat, setMat] = useState({ nombre:"", qty:"", unidad:"", costo:"" });
+function abrirEdit(id) { editando=id; render(); }
+function guardarEdit(id) {
+  const stock = +document.getElementById('e_stock').value;
+  const pMay = +document.getElementById('e_pmay').value;
+  const pMen = +document.getElementById('e_pmen').value;
+  state.productos = state.productos.map(p=>p.id===id?{...p,stock,pMay,pMen}:p);
+  editando=null; guardar(); render();
+}
 
-  const lista = data.productos.filter(p =>
-    q ? p.nombre.toLowerCase().includes(q.toLowerCase()) || p.id.includes(q) : true
-  );
+// VENDER
+function renderVender() {
+  const total = carrito.reduce((s,c)=>s+c.qty*(canal==="men"?c.pMen:c.pMay),0);
+  const sugerencias = busqVender.length>=2
+    ? state.productos.filter(p=>p.n.toLowerCase().includes(busqVender.toLowerCase())||p.id.includes(busqVender)).slice(0,5)
+    : [];
 
-  const prod = sel ? data.productos.find(p => p.id === sel) : null;
-  const costoTotal = prod ? prod.mats.reduce((s, m) => s + m.qty * m.costo, 0) : 0;
+  return `
+  ${window._vOk?'<div class="success">✓ Venta registrada — stock actualizado</div>':''}
+  <div style="display:flex;gap:8px;margin-bottom:14px">
+    <button onclick="canal='men';render()" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;font-size:13px;background:${canal==='men'?'#c9a84c':'#222'};color:${canal==='men'?'#111':'#666'}">🏠 Minorista</button>
+    <button onclick="canal='may';render()" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;font-size:13px;background:${canal==='may'?'#c9a84c':'#222'};color:${canal==='may'?'#111':'#666'}">📦 Mayorista</button>
+  </div>
+  <div style="position:relative;margin-bottom:14px">
+    <input type="search" placeholder="Buscar producto para agregar..." value="${busqVender}" oninput="busqVender=this.value;render()">
+    ${sugerencias.length>0?`<div style="position:absolute;top:105%;left:0;right:0;background:#1e1e1e;border:1px solid #333;border-radius:10px;z-index:10;overflow:hidden">
+      ${sugerencias.map(p=>`<button onclick="agregarCarrito('${p.id}')" style="width:100%;background:transparent;border:none;border-bottom:1px solid #2a2a2a;padding:10px 13px;color:#f0e0c0;cursor:pointer;text-align:left;display:flex;justify-content:space-between">
+        <span><span style="color:#c9a84c;font-size:11px;margin-right:6px">${p.id}</span>${p.n}</span>
+        <span style="color:#555;font-size:12px">stock:${p.stock}</span>
+      </button>`).join('')}
+    </div>`:''}
+  </div>
+  ${carrito.length===0?'<div style="text-align:center;color:#444;padding:50px 0;font-size:14px">Buscá un producto para empezar</div>':``}
+  ${carrito.map(c=>{
+    const precio = canal==="men"?c.pMen:c.pMay;
+    const stockReal = state.productos.find(p=>p.id===c.id)?.stock||0;
+    const sinStock = c.qty>stockReal;
+    return `<div class="card${sinStock?' alert':''}">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div><span style="color:#c9a84c;font-size:11px">${c.id}</span> <span style="font-size:14px;font-weight:600">${c.n}</span></div>
+        <span style="color:#c9a84c;font-weight:700">${fmt(precio*c.qty)}</span>
+      </div>
+      ${sinStock?`<div style="color:#e74c3c;font-size:11px;margin-top:3px">⚠ Stock insuficiente (hay ${stockReal})</div>`:''}
+      <div class="qty-row">
+        <button class="qty-btn" onclick="cambiarQty('${c.id}',-1)">−</button>
+        <span style="font-weight:700;min-width:28px;text-align:center">${c.qty}</span>
+        <button class="qty-btn" onclick="cambiarQty('${c.id}',1)">+</button>
+        <span style="color:#555;font-size:12px">${fmt(precio)} c/u</span>
+      </div>
+    </div>`;
+  }).join('')}
+  ${carrito.length>0?`
+  <div style="background:#1e1407;border:1px solid #c9a84c33;border-radius:12px;padding:13px 16px;margin:14px 0;display:flex;justify-content:space-between;align-items:center">
+    <span style="color:#888">Total ${canal==='men'?'minorista':'mayorista'}</span>
+    <span style="color:#c9a84c;font-size:22px;font-weight:700;font-family:Georgia,serif">${fmt(total)}</span>
+  </div>
+  <div style="display:flex;gap:10px;margin-bottom:10px">
+    <button class="btn-dark" onclick="carrito=[];render()" style="flex:1">Cancelar</button>
+    <button class="btn-gold" onclick="confirmarVenta()" style="flex:2">Registrar venta</button>
+  </div>
+  <button onclick="enviarWsp()" style="width:100%;background:#1a3a1a;color:#25d366;border:1px solid #25d36644;border-radius:11px;padding:13px;font-size:15px;font-weight:700;cursor:pointer">💬 Enviar presupuesto por WhatsApp</button>
+  `:''}`;
+}
 
-  function agregarMat() {
-    if (!mat.nombre || !mat.costo) return;
-    const np = data.productos.map(p => p.id !== sel ? p : { ...p, mats: [...p.mats, { ...mat, id: Date.now(), qty: +mat.qty || 1, costo: +mat.costo }] });
-    const nd = { ...data, productos: np }; setData(nd); guardar(nd);
-    setMat({ nombre:"", qty:"", unidad:"", costo:"" });
-  }
+function agregarCarrito(id) {
+  busqVender='';
+  const p = state.productos.find(x=>x.id===id);
+  const ex = carrito.find(c=>c.id===id);
+  if(ex) carrito = carrito.map(c=>c.id===id?{...c,qty:c.qty+1}:c);
+  else carrito.push({...p,qty:1});
+  render();
+}
+function cambiarQty(id,d) {
+  carrito = carrito.map(c=>c.id===id?{...c,qty:Math.max(0,c.qty+d)}:c).filter(c=>c.qty>0);
+  render();
+}
+function confirmarVenta() {
+  const venta = {
+    id:Date.now(), fecha:new Date().toLocaleDateString("es-AR"),
+    hora:new Date().toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"}),
+    canal, items:carrito.map(c=>({id:c.id,nombre:c.n,qty:c.qty,precio:canal==="men"?c.pMen:c.pMay})),
+    total:carrito.reduce((s,c)=>s+c.qty*(canal==="men"?c.pMen:c.pMay),0)
+  };
+  state.productos = state.productos.map(p=>{
+    const it=carrito.find(c=>c.id===p.id);
+    return it?{...p,stock:Math.max(0,p.stock-it.qty)}:p;
+  });
+  state.ventas = [venta,...state.ventas];
+  carrito=[]; guardar();
+  window._vOk=true; render();
+  setTimeout(()=>{window._vOk=false;render();},3000);
+}
+function enviarWsp() {
+  const total = carrito.reduce((s,c)=>s+c.qty*(canal==="men"?c.pMen:c.pMay),0);
+  let msg = "✨ *ENKKI* — Iluminación & Decoración\n━━━━━━━━━━━━━━━━━━\n\n";
+  msg += `📋 *Presupuesto ${canal==="men"?"Minorista":"Mayorista"}*\n📅 ${new Date().toLocaleDateString("es-AR")}\n\n*Detalle:*\n`;
+  carrito.forEach(c=>{ const p=canal==="men"?c.pMen:c.pMay; msg+=`• ${c.qty}× ${c.n} — $${(p*c.qty).toLocaleString("es-AR")}\n`; });
+  msg += `\n━━━━━━━━━━━━━━━━━━\n💰 *TOTAL: $${total.toLocaleString("es-AR")}*\n━━━━━━━━━━━━━━━━━━\n\n🔦 Fabricación artesanal en chapa y vidrio\n📱 3415824371\n🌐 enkki-catalogo.netlify.app\n\n_La antítesis del plástico_ 🖤`;
+  window.open("https://wa.me/?text="+encodeURIComponent(msg),"_blank");
+}
 
-  function eliminarMat(mid) {
-    const np = data.productos.map(p => p.id !== sel ? p : { ...p, mats: p.mats.filter(m => m.id !== mid) });
-    const nd = { ...data, productos: np }; setData(nd); guardar(nd);
-  }
-
-  if (sel && prod) {
-    const mMen = costoTotal > 0 ? ((prod.pMen - costoTotal) / prod.pMen * 100).toFixed(0) : "—";
-    const mMay = costoTotal > 0 ? ((prod.pMay - costoTotal) / prod.pMay * 100).toFixed(0) : "—";
-    return (
+// COSTOS
+function renderCostos() {
+  if(selCosto) return renderDetalleCosto();
+  const lista = busqCosto.length>1
+    ? state.productos.filter(p=>p.n.toLowerCase().includes(busqCosto.toLowerCase())||p.id.includes(busqCosto))
+    : state.productos;
+  return `
+  <input type="search" placeholder="🔍 Buscar producto..." value="${busqCosto}" oninput="busqCosto=this.value;render()" style="margin-bottom:12px">
+  ${lista.map(p=>{
+    const costo = (p.costoFijo||0) + (p.mats||[]).reduce((s,m)=>s+m.qty*m.costo,0);
+    const margen = costo>0?((p.pMen-costo)/p.pMen*100).toFixed(0):null;
+    return `<button onclick="selCosto='${p.id}';render()" style="width:100%;background:#1c1c1c;border:1px solid #2a2a2a;border-radius:14px;padding:12px 14px;text-align:left;cursor:pointer;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
       <div>
-        <button onClick={() => setSel(null)} style={{ background:"#222", border:"none", borderRadius:8, padding:"7px 14px", color:GOLD, cursor:"pointer", marginBottom:14, fontSize:13 }}>← Volver</button>
-        <div style={{ ...S.card, marginBottom:14 }}>
-          <div style={{ color:GOLD, fontSize:11 }}>{prod.id}</div>
-          <div style={{ color:"#f0e0c0", fontSize:17, fontWeight:700, fontFamily:"Georgia,serif", marginTop:2 }}>{prod.nombre}</div>
-        </div>
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8, marginBottom:14 }}>
-          {[["Costo",fmt(costoTotal),"#e74c3c"],["Margen Men",mMen+"%","#27ae60"],["Margen May",mMay+"%","#3498db"]].map(([lb,v,c])=>(
-            <div key={lb} style={{ ...S.card, textAlign:"center" }}>
-              <div style={{ color:c, fontSize:14, fontWeight:700 }}>{v}</div>
-              <div style={{ color:"#555", fontSize:10, marginTop:2 }}>{lb}</div>
-            </div>
-          ))}
-        </div>
-        <div style={{ color:"#555", fontSize:11, letterSpacing:1, marginBottom:8 }}>MATERIALES</div>
-        {prod.mats.length === 0 ? (
-          <div style={{ color:"#444", fontSize:13, textAlign:"center", padding:24 }}>Sin materiales cargados aún</div>
-        ) : (
-          <div style={{ display:"flex", flexDirection:"column", gap:7, marginBottom:14 }}>
-            {prod.mats.map(m => (
-              <div key={m.id} style={{ ...S.card, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-                <div>
-                  <div style={{ color:"#f0e0c0", fontSize:13, fontWeight:600 }}>{m.nombre}</div>
-                  <div style={{ color:"#555", fontSize:11 }}>{m.qty} {m.unidad} × {fmt(m.costo)}</div>
-                </div>
-                <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                  <span style={{ color:GOLD, fontWeight:700 }}>{fmt(m.qty*m.costo)}</span>
-                  <button onClick={() => eliminarMat(m.id)} style={{ background:"#2a2a2a", border:"none", borderRadius:6, padding:"5px 8px", color:"#e74c3c", cursor:"pointer" }}>✕</button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-        <div style={{ ...S.card, borderColor:"#c9a84c22" }}>
-          <div style={{ color:"#666", fontSize:11, letterSpacing:1, marginBottom:10 }}>+ NUEVO MATERIAL</div>
-          <input placeholder="Nombre (ej: Chapa 0.8mm)" value={mat.nombre} onChange={e => setMat(f=>({...f,nombre:e.target.value}))} style={{ ...S.input, marginBottom:8 }} />
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:7, marginBottom:10 }}>
-            <input placeholder="Cant." type="number" value={mat.qty} onChange={e => setMat(f=>({...f,qty:e.target.value}))} style={{ ...S.input }} />
-            <input placeholder="Unidad" value={mat.unidad} onChange={e => setMat(f=>({...f,unidad:e.target.value}))} style={{ ...S.input }} />
-            <input placeholder="$ costo" type="number" value={mat.costo} onChange={e => setMat(f=>({...f,costo:e.target.value}))} style={{ ...S.input }} />
-          </div>
-          <button onClick={agregarMat} style={S.btnGold}>Agregar material</button>
-        </div>
+        <span style="color:#c9a84c;font-size:10px;margin-right:6px">${p.id}</span>
+        <span style="color:#f0e0c0;font-size:14px;font-weight:600">${p.n}</span>
+        <div style="color:#555;font-size:12px;margin-top:2px">${(p.mats||[]).length} materiales extra</div>
       </div>
-    );
-  }
-
-  return (
-    <div>
-      <input value={q} onChange={e => setQ(e.target.value)} placeholder="🔍  Buscar producto..." style={{ ...S.input, marginBottom:12 }} />
-      <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-        {lista.map(p => {
-          const costo = p.mats.reduce((s,m)=>s+m.qty*m.costo,0);
-          const margen = costo > 0 ? ((p.pMen-costo)/p.pMen*100).toFixed(0) : null;
-          return (
-            <button key={p.id} onClick={() => setSel(p.id)} style={{ ...S.card, border:"1px solid #2a2a2a", textAlign:"left", cursor:"pointer", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-              <div>
-                <span style={{ color:GOLD, fontSize:10, marginRight:6 }}>{p.id}</span>
-                <span style={{ color:"#f0e0c0", fontSize:14, fontWeight:600 }}>{p.nombre}</span>
-                <div style={{ color:"#555", fontSize:12, marginTop:2 }}>{p.mats.length} materiales</div>
-              </div>
-              <div style={{ textAlign:"right" }}>
-                {costo > 0 ? <>
-                  <div style={{ color:"#e74c3c", fontSize:13, fontWeight:600 }}>{fmt(costo)}</div>
-                  <div style={{ color:"#27ae60", fontSize:11 }}>margen {margen}%</div>
-                </> : <div style={{ color:"#333", fontSize:12 }}>Sin costo</div>}
-              </div>
-            </button>
-          );
-        })}
+      <div style="text-align:right">
+        ${costo>0?`<div style="color:#e74c3c;font-size:13px;font-weight:600">${fmt(costo)}</div><div style="color:#27ae60;font-size:11px">margen ${margen}%</div>`:'<div style="color:#333;font-size:12px">Sin costo</div>'}
       </div>
-    </div>
-  );
+    </button>`;
+  }).join('')}`;
 }
 
-// ── TAB HISTORIAL ─────────────────────────────────────────────────────────────
-function TabHistorial({ data, setData, guardar }) {
-  const total = data.ventas.reduce((s,v)=>s+v.total,0);
-
-  function eliminar(id) {
-    const nd = { ...data, ventas: data.ventas.filter(v=>v.id!==id) };
-    setData(nd); guardar(nd);
-  }
-
-  if (!data.ventas.length) return (
-    <div style={{ textAlign:"center", color:"#444", padding:"60px 0", fontSize:14 }}>
-      Aún no hay ventas registradas.<br/><span style={{ color:"#333" }}>Aparecerán acá cuando vendas.</span>
+function renderDetalleCosto() {
+  const p = state.productos.find(x=>x.id===selCosto);
+  if(!p) return '';
+  const costoFijo = p.costoFijo||0;
+  const costoMats = (p.mats||[]).reduce((s,m)=>s+m.qty*m.costo,0);
+  const costo = costoFijo+costoMats;
+  const mMen = costo>0?((p.pMen-costo)/p.pMen*100).toFixed(0):"—";
+  const mMay = costo>0?((p.pMay-costo)/p.pMay*100).toFixed(0):"—";
+  return `
+  <button class="btn-sm" onclick="selCosto=null;render()" style="margin-bottom:14px">← Volver</button>
+  <div class="card" style="margin-bottom:14px">
+    <div style="color:#c9a84c;font-size:11px">${p.id}</div>
+    <div style="color:#f0e0c0;font-size:17px;font-weight:700;font-family:Georgia,serif;margin-top:2px">${p.n}</div>
+  </div>
+  <div class="grid3">
+    <div class="stat-box"><div style="color:#e74c3c;font-size:14px;font-weight:700">${fmt(costo)}</div><div style="color:#555;font-size:10px;margin-top:2px">Costo</div></div>
+    <div class="stat-box"><div style="color:#27ae60;font-size:14px;font-weight:700">${mMen}%</div><div style="color:#555;font-size:10px;margin-top:2px">Margen Men</div></div>
+    <div class="stat-box"><div style="color:#3498db;font-size:14px;font-weight:700">${mMay}%</div><div style="color:#555;font-size:10px;margin-top:2px">Margen May</div></div>
+  </div>
+  ${costoFijo>0?`<div class="card" style="margin-bottom:8px"><div style="color:#f0e0c0;font-size:13px;font-weight:600">Costo base precargado</div><div style="color:#c9a84c;font-weight:700">${fmt(costoFijo)}</div></div>`:''}
+  <div style="color:#555;font-size:11px;letter-spacing:1px;margin-bottom:8px">MATERIALES EXTRA</div>
+  ${(p.mats||[]).length===0?'<div style="color:#444;font-size:13px;text-align:center;padding:20px">Sin materiales extra</div>':''}
+  ${(p.mats||[]).map(m=>`<div class="card" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
+    <div><div style="color:#f0e0c0;font-size:13px;font-weight:600">${m.nombre}</div><div style="color:#555;font-size:11px">${m.qty} ${m.unidad} × ${fmt(m.costo)}</div></div>
+    <div style="display:flex;align-items:center;gap:8px"><span style="color:#c9a84c;font-weight:700">${fmt(m.qty*m.costo)}</span>
+    <button onclick="eliminarMat('${p.id}',${m.id})" style="background:#2a2a2a;border:none;border-radius:6px;padding:5px 8px;color:#e74c3c;cursor:pointer">✕</button></div>
+  </div>`).join('')}
+  <div class="card" style="border-color:#c9a84c22;margin-top:14px">
+    <div style="color:#666;font-size:11px;letter-spacing:1px;margin-bottom:10px">+ AGREGAR MATERIAL</div>
+    <input type="text" id="m_nombre" placeholder="Nombre (ej: Chapa 0.8mm)" style="margin-bottom:8px">
+    <div class="grid3">
+      <input type="number" id="m_qty" placeholder="Cant.">
+      <input type="text" id="m_unidad" placeholder="Unidad">
+      <input type="number" id="m_costo" placeholder="$ costo">
     </div>
-  );
-
-  return (
-    <div>
-      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:16 }}>
-        <div style={{ ...S.card, textAlign:"center" }}>
-          <div style={{ color:GOLD, fontSize:19, fontWeight:700, fontFamily:"Georgia,serif" }}>{fmt(total)}</div>
-          <div style={{ color:"#555", fontSize:10, marginTop:2 }}>TOTAL FACTURADO</div>
-        </div>
-        <div style={{ ...S.card, textAlign:"center" }}>
-          <div style={{ color:"#f0e0c0", fontSize:19, fontWeight:700, fontFamily:"Georgia,serif" }}>{data.ventas.length}</div>
-          <div style={{ color:"#555", fontSize:10, marginTop:2 }}>VENTAS</div>
-        </div>
-      </div>
-      <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
-        {data.ventas.map(v => (
-          <div key={v.id} style={S.card}>
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
-              <div>
-                <span style={{ color:"#f0e0c0", fontSize:13, fontWeight:600 }}>{v.fecha}</span>
-                <span style={{ color:"#555", fontSize:12, marginLeft:7 }}>{v.hora}</span>
-                <span style={{ background: v.canal==="men" ? "#c9a84c22" : "#3498db22", color: v.canal==="men" ? GOLD : "#3498db", fontSize:10, padding:"2px 7px", borderRadius:5, marginLeft:7, textTransform:"uppercase" }}>{v.canal==="men"?"Minorista":"Mayorista"}</span>
-              </div>
-              <button onClick={() => eliminar(v.id)} style={{ background:"#2a2a2a", border:"none", borderRadius:6, padding:"4px 8px", color:"#555", cursor:"pointer" }}>✕</button>
-            </div>
-            {v.items.map((it,i) => (
-              <div key={i} style={{ display:"flex", justifyContent:"space-between", color:"#777", fontSize:12, marginBottom:3 }}>
-                <span>{it.qty}× {it.nombre}</span><span>{fmt(it.precio*it.qty)}</span>
-              </div>
-            ))}
-            <div style={{ borderTop:"1px solid #2a2a2a", marginTop:8, paddingTop:8, display:"flex", justifyContent:"space-between" }}>
-              <span style={{ color:"#666", fontSize:13 }}>Total</span>
-              <span style={{ color:GOLD, fontWeight:700, fontSize:15 }}>{fmt(v.total)}</span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+    <button class="btn-gold" onclick="agregarMat('${p.id}')">Agregar material</button>
+  </div>`;
 }
 
-// ── APP ───────────────────────────────────────────────────────────────────────
-export default function App() {
-  const [tab, setTab] = useState("stock");
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    cargarDatos().then(d => { setData(d); setLoading(false); });
-  }, []);
-
-  const guardar = (d) => guardarDatos(d);
-
-  if (loading) return (
-    <div style={{ background:"#111", minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center" }}>
-      <div style={{ color:GOLD, fontFamily:"Georgia,serif", fontSize:20 }}>enkki</div>
-    </div>
-  );
-
-  const tabs = [
-    { id:"stock", icon:"📦", label:"Stock" },
-    { id:"vender", icon:"🛒", label:"Vender" },
-    { id:"costos", icon:"💲", label:"Costos" },
-    { id:"historial", icon:"📋", label:"Historial" },
-  ];
-
-  return (
-    <div style={{ background:"#111", minHeight:"100vh", color:"#f0e0c0", fontFamily:"system-ui,sans-serif", maxWidth:600, margin:"0 auto", paddingBottom:75 }}>
-      {/* Header */}
-      <div style={{ padding:"20px 18px 14px", borderBottom:"1px solid #1e1e1e", display:"flex", alignItems:"baseline", gap:10 }}>
-        <span style={{ fontFamily:"Georgia,serif", fontSize:24, fontWeight:700, color:GOLD }}>enkki</span>
-        <span style={{ color:"#333", fontSize:11, letterSpacing:2 }}>GESTIÓN</span>
-      </div>
-
-      {/* Contenido */}
-      <div style={{ padding:"18px 15px" }}>
-        {tab === "stock"    && <TabStock     data={data} setData={setData} guardar={guardar} />}
-        {tab === "vender"   && <TabVender    data={data} setData={setData} guardar={guardar} />}
-        {tab === "costos"   && <TabCostos    data={data} setData={setData} guardar={guardar} />}
-        {tab === "historial"&& <TabHistorial data={data} setData={setData} guardar={guardar} />}
-      </div>
-
-      {/* Nav */}
-      <div style={{ position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)", width:"100%", maxWidth:600, background:"#151515", borderTop:"1px solid #1e1e1e", display:"flex", zIndex:100 }}>
-        {tabs.map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)} style={{ flex:1, padding:"11px 0 9px", background:"transparent", border:"none", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:3, color: tab===t.id ? GOLD : "#444" }}>
-            <span style={{ fontSize:18 }}>{t.icon}</span>
-            <span style={{ fontSize:10, fontWeight:600 }}>{t.label}</span>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
+function agregarMat(id) {
+  const nombre = document.getElementById('m_nombre').value;
+  const qty = +document.getElementById('m_qty').value||1;
+  const unidad = document.getElementById('m_unidad').value;
+  const costo = +document.getElementById('m_costo').value;
+  if(!nombre||!costo) return;
+  state.productos = state.productos.map(p=>p.id!==id?p:{...p,mats:[...(p.mats||[]),{id:Date.now(),nombre,qty,unidad,costo}]});
+  guardar(); render();
+}
+function eliminarMat(id,mid) {
+  state.productos = state.productos.map(p=>p.id!==id?p:{...p,mats:(p.mats||[]).filter(m=>m.id!==mid)});
+  guardar(); render();
 }
 
+// HISTORIAL
+function renderHistorial() {
+  if(!state.ventas.length) return '<div style="text-align:center;color:#444;padding:60px 0;font-size:14px">Sin ventas registradas todavía.</div>';
+  const total = state.ventas.reduce((s,v)=>s+v.total,0);
+  return `
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+    <div class="stat-box"><div style="color:#c9a84c;font-size:19px;font-weight:700;font-family:Georgia,serif">${fmt(total)}</div><div style="color:#555;font-size:10px;margin-top:2px">TOTAL FACTURADO</div></div>
+    <div class="stat-box"><div style="color:#f0e0c0;font-size:19px;font-weight:700;font-family:Georgia,serif">${state.ventas.length}</div><div style="color:#555;font-size:10px;margin-top:2px">VENTAS</div></div>
+  </div>
+  ${state.ventas.map(v=>`<div class="card" style="margin-bottom:10px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div>
+        <span style="color:#f0e0c0;font-size:13px;font-weight:600">${v.fecha}</span>
+        <span style="color:#555;font-size:12px;margin-left:7px">${v.hora}</span>
+        <span class="tag" style="background:${v.canal==='men'?'#c9a84c22':'#3498db22'};color:${v.canal==='men'?'#c9a84c':'#3498db'};margin-left:7px">${v.canal==='men'?'Minorista':'Mayorista'}</span>
+      </div>
+      <button onclick="eliminarVenta(${v.id})" style="background:#2a2a2a;border:none;border-radius:6px;padding:4px 8px;color:#555;cursor:pointer">✕</button>
+    </div>
+    ${v.items.map(it=>`<div style="display:flex;justify-content:space-between;color:#777;font-size:12px;margin-bottom:3px"><span>${it.qty}× ${it.nombre}</span><span>${fmt(it.precio*it.qty)}</span></div>`).join('')}
+    <div style="border-top:1px solid #2a2a2a;margin-top:8px;padding-top:8px;display:flex;justify-content:space-between">
+      <span style="color:#666;font-size:13px">Total</span>
+      <span style="color:#c9a84c;font-weight:700;font-size:15px">${fmt(v.total)}</span>
+    </div>
+  </div>`).join('')}`;
+}
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<App />);
+function eliminarVenta(id) {
+  state.ventas = state.ventas.filter(v=>v.id!==id);
+  guardar(); render();
+}
+
+// TAB NAV
+function showTab(tab) {
+  tabActual=tab; selCosto=null; busqStock=''; busqVender=''; busqCosto='';
+  document.querySelectorAll('.nav button').forEach((b,i)=>{
+    b.className=(['stock','vender','costos','historial'][i]===tab)?'active':'';
+  });
+  render();
+}
+
+// INIT
+cargar();
 </script>
 </body>
 </html>
