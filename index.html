@@ -213,7 +213,7 @@ function render() {
   const c = document.getElementById("content");
   if (state.loading) { c.innerHTML = '<div style="text-align:center;padding:60px;color:#c9a84c;font-family:Georgia,serif;font-size:20px">Cargando...</div>'; return; }
   if (tabActual==="stock") c.innerHTML = renderStock();
-  else if (tabActual==="vender") c.innerHTML = renderVender();
+  else if (tabActual==="vender") { c.innerHTML = renderVender(); renderCarrito(); }
   else if (tabActual==="costos") c.innerHTML = renderCostos();
   else c.innerHTML = renderHistorial();
 }
@@ -289,32 +289,34 @@ function guardarEdit(id) {
 
 // VENDER
 function renderVender() {
-  const total = carrito.reduce((s,c)=>s+c.qty*(canal==="men"?c.pMen:c.pMay),0);
-  const sugerencias = busqVender.length>=2
-    ? state.productos.filter(p=>p.n.toLowerCase().includes(busqVender.toLowerCase())||p.id.includes(busqVender)).slice(0,5)
-    : [];
-
   return `
   ${window._vOk?'<div class="success">✓ Venta registrada — stock actualizado</div>':''}
   <div style="display:flex;gap:8px;margin-bottom:14px">
-    <button onclick="canal='men';render()" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;font-size:13px;background:${canal==='men'?'#c9a84c':'#222'};color:${canal==='men'?'#111':'#666'}">🏠 Minorista</button>
-    <button onclick="canal='may';render()" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;font-size:13px;background:${canal==='may'?'#c9a84c':'#222'};color:${canal==='may'?'#111':'#666'}">📦 Mayorista</button>
+    <button onclick="canal='men';renderCarrito()" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;font-size:13px;background:${canal==='men'?'#c9a84c':'#222'};color:${canal==='men'?'#111':'#666'}">🏠 Minorista</button>
+    <button onclick="canal='may';renderCarrito()" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;font-size:13px;background:${canal==='may'?'#c9a84c':'#222'};color:${canal==='may'?'#111':'#666'}">📦 Mayorista</button>
   </div>
   <div style="position:relative;margin-bottom:14px">
-    <input type="search" placeholder="Buscar producto para agregar..." value="${busqVender}" oninput="busqVender=this.value;render()">
-    ${sugerencias.length>0?`<div style="position:absolute;top:105%;left:0;right:0;background:#1e1e1e;border:1px solid #333;border-radius:10px;z-index:10;overflow:hidden">
-      ${sugerencias.map(p=>`<button onclick="agregarCarrito('${p.id}')" style="width:100%;background:transparent;border:none;border-bottom:1px solid #2a2a2a;padding:10px 13px;color:#f0e0c0;cursor:pointer;text-align:left;display:flex;justify-content:space-between">
-        <span><span style="color:#c9a84c;font-size:11px;margin-right:6px">${p.id}</span>${p.n}</span>
-        <span style="color:#555;font-size:12px">stock:${p.stock}</span>
-      </button>`).join('')}
-    </div>`:''}
+    <input type="search" id="busq-vender" placeholder="Buscar producto para agregar..." autocomplete="off" oninput="onBusqVender(this.value)" style="width:100%;background:#242424;border:1px solid #333;border-radius:10px;padding:10px 13px;color:#f0e0c0;font-size:15px">
+    <div id="sugerencias-box"></div>
   </div>
-  ${carrito.length===0?'<div style="text-align:center;color:#444;padding:50px 0;font-size:14px">Buscá un producto para empezar</div>':``}
-  ${carrito.map(c=>{
+  <div id="carrito-box"></div>`;
+}
+
+function renderCarrito() {
+  // Actualizar botones canal
+  document.querySelectorAll('.canal-btn').forEach(b => {
+    b.style.background = b.dataset.canal === canal ? '#c9a84c' : '#222';
+    b.style.color = b.dataset.canal === canal ? '#111' : '#666';
+  });
+  const box = document.getElementById('carrito-box');
+  if(!box) return;
+  const total = carrito.reduce((s,c)=>s+c.qty*(canal==="men"?c.pMen:c.pMay),0);
+  if(carrito.length===0) { box.innerHTML='<div style="text-align:center;color:#444;padding:40px 0;font-size:14px">Buscá un producto para empezar</div>'; return; }
+  box.innerHTML = carrito.map(c=>{
     const precio = canal==="men"?c.pMen:c.pMay;
     const stockReal = state.productos.find(p=>p.id===c.id)?.stock||0;
     const sinStock = c.qty>stockReal;
-    return `<div class="card${sinStock?' alert':''}">
+    return `<div class="card${sinStock?' alert':''}" style="margin-bottom:8px">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div><span style="color:#c9a84c;font-size:11px">${c.id}</span> <span style="font-size:14px;font-weight:600">${c.n}</span></div>
         <span style="color:#c9a84c;font-weight:700">${fmt(precio*c.qty)}</span>
@@ -327,8 +329,52 @@ function renderVender() {
         <span style="color:#555;font-size:12px">${fmt(precio)} c/u</span>
       </div>
     </div>`;
-  }).join('')}
-  ${carrito.length>0?`
+  }).join('') + `
+  <div style="background:#1e1407;border:1px solid #c9a84c33;border-radius:12px;padding:13px 16px;margin:14px 0;display:flex;justify-content:space-between;align-items:center">
+    <span style="color:#888">Total ${canal==='men'?'minorista':'mayorista'}</span>
+    <span style="color:#c9a84c;font-size:22px;font-weight:700;font-family:Georgia,serif">${fmt(total)}</span>
+  </div>
+  <div style="display:flex;gap:10px;margin-bottom:10px">
+    <button class="btn-dark" onclick="carrito=[];renderCarrito()" style="flex:1">Cancelar</button>
+    <button class="btn-gold" onclick="confirmarVenta()" style="flex:2">Registrar venta</button>
+  </div>
+  <button onclick="enviarWsp()" style="width:100%;background:#1a3a1a;color:#25d366;border:1px solid #25d36644;border-radius:11px;padding:13px;font-size:15px;font-weight:700;cursor:pointer">💬 Enviar presupuesto por WhatsApp</button>`;
+}
+
+function onBusqVender(val) {
+  busqVender = val;
+  const sugerencias = val.length>=2
+    ? state.productos.filter(p=>p.n.toLowerCase().includes(val.toLowerCase())||p.id.includes(val)).slice(0,5)
+    : [];
+  const sb = document.getElementById('sugerencias-box');
+  if(!sb) return;
+  if(sugerencias.length===0) { sb.innerHTML=''; return; }
+  sb.innerHTML = `<div style="position:absolute;top:0;left:0;right:0;background:#1e1e1e;border:1px solid #333;border-radius:10px;z-index:10;overflow:hidden">
+    ${sugerencias.map(p=>`<button onclick="agregarCarrito('${p.id}')" style="width:100%;background:transparent;border:none;border-bottom:1px solid #2a2a2a;padding:10px 13px;color:#f0e0c0;cursor:pointer;text-align:left;display:flex;justify-content:space-between"><span><span style="color:#c9a84c;font-size:11px;margin-right:6px">${p.id}</span>${p.n}</span><span style="color:#555;font-size:12px">stock:${p.stock}</span></button>`).join('')}
+  </div>`;
+}
+
+function renderCarritoInner() {
+  const total = carrito.reduce((s,c)=>s+c.qty*(canal==="men"?c.pMen:c.pMay),0);
+  if(carrito.length===0) return '<div style="text-align:center;color:#444;padding:30px 0;font-size:14px">Buscá un producto para empezar</div>';
+  return carrito.map(c=>{
+    const precio = canal==="men"?c.pMen:c.pMay;
+    const stockReal = state.productos.find(p=>p.id===c.id)?.stock||0;
+    const sinStock = c.qty>stockReal;
+    return `<div class="card${sinStock?' alert':''}" style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div><span style="color:#c9a84c;font-size:11px">${c.id}</span> <span style="font-size:14px;font-weight:600">${c.n}</span></div>
+        <span style="color:#c9a84c;font-weight:700">${fmt(precio*c.qty)}</span>
+      </div>
+      ${sinStock?`<div style="color:#e74c3c;font-size:11px;margin-top:3px">⚠ Stock insuficiente (hay ${stockReal})</div>`:''}
+      <div class="qty-row">
+        <button class="qty-btn" onclick="cambiarQty('${c.id}',-1)">−</button>
+        <span style="font-weight:700;min-width:28px;text-align:center">${c.qty}</span>
+        <button class="qty-btn" onclick="cambiarQty('${c.id}',1)">+</button>
+        <span style="color:#555;font-size:12px">${fmt(precio)} c/u</span>
+      </div>
+    </div>`;
+  }).join('') + `
   <div style="background:#1e1407;border:1px solid #c9a84c33;border-radius:12px;padding:13px 16px;margin:14px 0;display:flex;justify-content:space-between;align-items:center">
     <span style="color:#888">Total ${canal==='men'?'minorista':'mayorista'}</span>
     <span style="color:#c9a84c;font-size:22px;font-weight:700;font-family:Georgia,serif">${fmt(total)}</span>
@@ -337,8 +383,7 @@ function renderVender() {
     <button class="btn-dark" onclick="carrito=[];render()" style="flex:1">Cancelar</button>
     <button class="btn-gold" onclick="confirmarVenta()" style="flex:2">Registrar venta</button>
   </div>
-  <button onclick="enviarWsp()" style="width:100%;background:#1a3a1a;color:#25d366;border:1px solid #25d36644;border-radius:11px;padding:13px;font-size:15px;font-weight:700;cursor:pointer">💬 Enviar presupuesto por WhatsApp</button>
-  `:''}`;
+  <button onclick="enviarWsp()" style="width:100%;background:#1a3a1a;color:#25d366;border:1px solid #25d36644;border-radius:11px;padding:13px;font-size:15px;font-weight:700;cursor:pointer">💬 Enviar presupuesto por WhatsApp</button>`;
 }
 
 function agregarCarrito(id) {
@@ -347,11 +392,16 @@ function agregarCarrito(id) {
   const ex = carrito.find(c=>c.id===id);
   if(ex) carrito = carrito.map(c=>c.id===id?{...c,qty:c.qty+1}:c);
   else carrito.push({...p,qty:1});
-  render();
+  // Limpiar buscador y sugerencias sin perder foco
+  const inp = document.getElementById('busq-vender');
+  if(inp) inp.value='';
+  const sb = document.getElementById('sugerencias-box');
+  if(sb) sb.innerHTML='';
+  renderCarrito();
 }
 function cambiarQty(id,d) {
   carrito = carrito.map(c=>c.id===id?{...c,qty:Math.max(0,c.qty+d)}:c).filter(c=>c.qty>0);
-  render();
+  renderCarrito();
 }
 function confirmarVenta() {
   const venta = {
@@ -367,7 +417,7 @@ function confirmarVenta() {
   state.ventas = [venta,...state.ventas];
   carrito=[]; guardar();
   window._vOk=true; render();
-  setTimeout(()=>{window._vOk=false;render();},3000);
+  setTimeout(()=>{window._vOk=false; if(tabActual==='vender') render();},3000);
 }
 function enviarWsp() {
   const total = carrito.reduce((s,c)=>s+c.qty*(canal==="men"?c.pMen:c.pMay),0);
@@ -422,6 +472,36 @@ function renderDetalleCosto() {
     <div class="stat-box"><div style="color:#3498db;font-size:14px;font-weight:700">${mMay}%</div><div style="color:#555;font-size:10px;margin-top:2px">Margen May</div></div>
   </div>
   ${costoFijo>0?`<div class="card" style="margin-bottom:8px"><div style="color:#f0e0c0;font-size:13px;font-weight:600">Costo base precargado</div><div style="color:#c9a84c;font-weight:700">${fmt(costoFijo)}</div></div>`:''}
+  
+  ${costo>0?`
+  <div class="card" style="margin-bottom:14px;border-color:#c9a84c33">
+    <div style="color:#666;font-size:11px;letter-spacing:1px;margin-bottom:12px">🎯 CALCULAR PRECIO POR MARGEN</div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <button onclick="ajustarMargen('${p.id}',-5)" style="background:#2a2a2a;border:none;border-radius:8px;padding:8px 14px;color:#f0e0c0;cursor:pointer;font-size:16px;font-weight:700">−</button>
+      <div style="flex:1;text-align:center">
+        <div style="color:#c9a84c;font-size:28px;font-weight:700;font-family:Georgia,serif">${p.margenObj||50}%</div>
+        <div style="color:#555;font-size:11px">margen objetivo</div>
+      </div>
+      <button onclick="ajustarMargen('${p.id}',5)" style="background:#2a2a2a;border:none;border-radius:8px;padding:8px 14px;color:#f0e0c0;cursor:pointer;font-size:16px;font-weight:700">+</button>
+    </div>
+    <div style="background:#1a1a1a;border-radius:10px;padding:12px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="color:#666;font-size:13px">Costo</span>
+        <span style="color:#e74c3c;font-weight:600">${fmt(costo)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="color:#666;font-size:13px">Ganancia</span>
+        <span style="color:#27ae60;font-weight:600">${fmt(Math.round(costo * (p.margenObj||50) / 100))}</span>
+      </div>
+      <div style="border-top:1px solid #2a2a2a;margin-top:6px;padding-top:8px;display:flex;justify-content:space-between">
+        <span style="color:#f0e0c0;font-size:14px;font-weight:700">Precio sugerido</span>
+        <span style="color:#c9a84c;font-size:18px;font-weight:700;font-family:Georgia,serif">${fmt(Math.round(costo * (1 + (p.margenObj||50)/100)))}</span>
+      </div>
+    </div>
+    <button onclick="aplicarPrecio('${p.id}',${Math.round(costo * (1 + (p.margenObj||50)/100))})" style="width:100%;background:#c9a84c;color:#111;border:none;border-radius:10px;padding:11px;font-size:14px;font-weight:700;cursor:pointer">Aplicar como precio minorista</button>
+  </div>
+  `:''}
+
   <div style="color:#555;font-size:11px;letter-spacing:1px;margin-bottom:8px">MATERIALES EXTRA</div>
   ${(p.mats||[]).length===0?'<div style="color:#444;font-size:13px;text-align:center;padding:20px">Sin materiales extra</div>':''}
   ${(p.mats||[]).map(m=>`<div class="card" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
@@ -439,6 +519,21 @@ function renderDetalleCosto() {
     </div>
     <button class="btn-gold" onclick="agregarMat('${p.id}')">Agregar material</button>
   </div>`;
+}
+
+function ajustarMargen(id, delta) {
+  state.productos = state.productos.map(p => p.id!==id ? p : {...p, margenObj: Math.max(1, Math.min(500, (p.margenObj||50) + delta))});
+  guardar(); selCosto=id; render();
+}
+
+function aplicarPrecio(id, precio) {
+  state.productos = state.productos.map(p => p.id!==id ? p : {...p, pMen: precio});
+  guardar();
+  // Mostrar confirmación sin perder pantalla
+  const btn = event.target;
+  btn.textContent = '✓ Precio aplicado';
+  btn.style.background = '#27ae60';
+  setTimeout(() => { btn.textContent = 'Aplicar como precio minorista'; btn.style.background = '#c9a84c'; }, 2000);
 }
 
 function agregarMat(id) {
