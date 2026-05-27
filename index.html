@@ -374,7 +374,7 @@ function enviarWsp() {
   let msg = "✨ *ENKKI* — Iluminación & Decoración\n━━━━━━━━━━━━━━━━━━\n\n";
   msg += `📋 *Presupuesto ${canal==="men"?"Minorista":"Mayorista"}*\n📅 ${new Date().toLocaleDateString("es-AR")}\n\n*Detalle:*\n`;
   carrito.forEach(c=>{ const p=canal==="men"?c.pMen:c.pMay; msg+=`• ${c.qty}× ${c.n} — $${(p*c.qty).toLocaleString("es-AR")}\n`; });
-  msg += `\n━━━━━━━━━━━━━━━━━━\n💰 *TOTAL: $${total.toLocaleString("es-AR")}*\n━━━━━━━━━━━━━━━━━━\n\n🔦 Fabricación artesanal en chapa y vidrio\n📱 3415824371\n🌐 enkki-catalogo.netlify.app\n\n_La antítesis del plástico_ 🖤`;
+  msg += `\n━━━━━━━━━━━━━━━━━━\n💰 *TOTAL: $${total.toLocaleString("es-AR")}*\n━━━━━━━━━━━━━━━━━━\n\n🔦 Fabricación artesanal en chapa y vidrio\n📱 3415824371\n🌐 enkki.netlify.app\n\n_La antítesis del plástico_ 🖤`;
   window.open("https://wa.me/?text="+encodeURIComponent(msg),"_blank");
 }
 
