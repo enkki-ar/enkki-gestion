@@ -8,40 +8,31 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#111;color:#f0e0c0;font-family:system-ui,sans-serif;max-width:600px;margin:0 auto;padding-bottom:80px}
 input,button{font-family:inherit;outline:none}
-.gold{color:#c9a84c}
 .header{padding:20px 16px 14px;border-bottom:1px solid #1e1e1e;display:flex;align-items:baseline;gap:10px}
 .header h1{font-family:Georgia,serif;font-size:24px;font-weight:700;color:#c9a84c}
 .header span{color:#333;font-size:11px;letter-spacing:2px}
 .content{padding:16px}
-/* NAV */
 .nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:600px;background:#151515;border-top:1px solid #1e1e1e;display:flex;z-index:100}
 .nav button{flex:1;padding:11px 0 9px;background:transparent;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;color:#444;font-size:10px;font-weight:600}
 .nav button.active{color:#c9a84c}
 .nav button span.ico{font-size:18px}
-/* CARDS */
 .card{background:#1c1c1c;border:1px solid #2a2a2a;border-radius:14px;padding:12px 14px;margin-bottom:8px}
 .card.alert{border-color:#c0392b33}
 .card.warn{border-color:#c9a84c33}
-/* INPUTS */
-input[type=text],input[type=number],input[type=search]{width:100%;background:#242424;border:1px solid #333;border-radius:10px;padding:10px 13px;color:#f0e0c0;font-size:15px}
-/* BUTTONS */
+.search-input{width:100%;background:#242424;border:1px solid #333;border-radius:10px;padding:10px 13px;color:#f0e0c0;font-size:15px;margin-bottom:12px}
 .btn-gold{background:#c9a84c;color:#111;border:none;border-radius:11px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;width:100%}
 .btn-dark{background:#2a2a2a;color:#888;border:none;border-radius:11px;padding:13px;font-size:14px;cursor:pointer}
 .btn-sm{background:#2a2a2a;border:none;border-radius:8px;padding:8px 10px;color:#c9a84c;cursor:pointer;font-size:13px}
 .tag{font-size:10px;padding:2px 7px;border-radius:5px;font-weight:700}
-/* MODAL */
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;display:flex;align-items:flex-end}
 .modal{background:#181818;border-radius:18px 18px 0 0;width:100%;max-height:88vh;overflow-y:auto;padding:22px 18px 36px}
 .modal h3{font-family:Georgia,serif;font-size:17px;color:#f0e0c0;font-weight:700;margin-bottom:18px}
-.label{color:#666;font-size:11px;letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:5px;margin-top:12px}
-/* TABS */
+.field-label{color:#666;font-size:11px;letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:5px;margin-top:12px}
 .cats{display:flex;gap:7px;overflow-x:auto;padding-bottom:8px;margin-bottom:12px;scrollbar-width:none}
 .cats::-webkit-scrollbar{display:none}
 .cat-btn{flex-shrink:0;padding:5px 13px;border-radius:18px;border:none;cursor:pointer;font-size:12px;font-weight:600;background:#222;color:#666}
 .cat-btn.active{background:#c9a84c;color:#111}
-/* TOTALES */
 .total-box{background:linear-gradient(135deg,#2a1c08,#1a1a1a);border:1px solid #c9a84c22;border-radius:14px;padding:14px 18px;margin-bottom:14px}
-/* QTY */
 .qty-row{display:flex;align-items:center;gap:10px;margin-top:9px}
 .qty-btn{background:#2a2a2a;border:none;border-radius:7px;width:30px;height:30px;color:#f0e0c0;font-size:18px;cursor:pointer}
 .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px}
@@ -50,36 +41,22 @@ input[type=text],input[type=number],input[type=search]{width:100%;background:#24
 </style>
 </head>
 <body>
-
-<div class="header">
-  <h1>enkki</h1>
-  <span>GESTIÓN</span>
-</div>
-
+<div class="header"><h1>enkki</h1><span>GESTIÓN</span></div>
 <div class="content" id="content"></div>
-
 <nav class="nav">
   <button class="active" onclick="showTab('stock')"><span class="ico">📦</span>Stock</button>
   <button onclick="showTab('vender')"><span class="ico">🛒</span>Vender</button>
   <button onclick="showTab('costos')"><span class="ico">💲</span>Costos</button>
   <button onclick="showTab('historial')"><span class="ico">📋</span>Historial</button>
 </nav>
-
 <script>
-const SUPA_URL = "https://mnpxqfuniizefnkzhszy.supabase.co";
-const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ucHhxZnVuaWl6ZWZua3poc3p5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMjQwMDksImV4cCI6MjA5NDkwMDAwOX0.jsJ4dg0r0jQv2pEPPosoeM1eXlS1m5k2xy3CiATRPBU";
-const H = {"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+SUPA_KEY};
-const fmt = n => "$" + Number(n).toLocaleString("es-AR");
-
-const COSTOS_FIJOS = {
-  "200":8329,"210":11000,"201":8329,"211":12333,"221":36071,
-  "202":8000,"212":8329,"203":8000,"213":6806,"204":7459,
-  "214":9585,"205":8000,"215":10532,"225":30000,
-  "301":12390,"302":13790,"312":9672,"322":12000,"332":9000,
-  "303":12000,"304":17500,"314":15500,"305":10306,"315":9500
-};
-
-const PRODS = [
+const SUPA_URL="https://mnpxqfuniizefnkzhszy.supabase.co";
+const SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ucHhxZnVuaWl6ZWZua3poc3p5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMjQwMDksImV4cCI6MjA5NDkwMDAwOX0.jsJ4dg0r0jQv2pEPPosoeM1eXlS1m5k2xy3CiATRPBU";
+const H={"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+SUPA_KEY};
+const fmt=n=>"$"+Number(n).toLocaleString("es-AR");
+const CATS=["Pantallas","Faroles","Direccionales","Terrarios","Sal","Vitro","Fanales","Geometría"];
+const COSTOS_FIJOS={"200":8329,"210":11000,"201":8329,"211":12333,"221":36071,"202":8000,"212":8329,"203":8000,"213":6806,"204":7459,"214":9585,"205":8000,"215":10532,"225":30000,"301":12390,"302":13790,"312":9672,"322":12000,"332":9000,"303":12000,"304":17500,"314":15500,"305":10306,"315":9500};
+const PRODS=[
   {id:"102",n:"Outline II",cat:"Pantallas",stock:500,pMay:17000,pMen:26500},
   {id:"103",n:"Outline III",cat:"Pantallas",stock:400,pMay:18500,pMen:28700},
   {id:"200",n:"Farol Mini",cat:"Faroles",stock:0,pMay:16000,pMen:25000},
@@ -159,169 +136,163 @@ const PRODS = [
   {id:"807",n:"Semilla",cat:"Geometría",stock:1,pMay:17400,pMen:26900}
 ];
 
-// STATE
-let state = { productos: [], ventas: [], loading: true };
-let carrito = [];
-let canal = "men";
-let tabActual = "stock";
-let catActiva = "Pantallas";
-let editando = null;
-let selCosto = null;
-let busqStock = "";
-let busqVender = "";
-let busqCosto = "";
+let state={productos:[],ventas:[],loading:true};
+let carrito=[],canal="men",tabActual="stock",catActiva="Pantallas",editando=null,selCosto=null;
 
-// SUPABASE
-async function cargar() {
-  try {
-    const r = await fetch(SUPA_URL+"/rest/v1/enkki_datos?id=eq.main&select=productos,ventas", {headers:H});
-    const j = await r.json();
-    if (j && j[0] && j[0].productos && j[0].productos.length > 0) {
-      state.productos = j[0].productos;
-      state.ventas = j[0].ventas || [];
-      // Aplicar costos fijos
-      state.productos = state.productos.map(p => ({...p, costoFijo: COSTOS_FIJOS[p.id] || p.costoFijo || 0}));
-      state.loading = false;
-      render();
-      return;
+async function cargar(){
+  try{
+    const r=await fetch(SUPA_URL+"/rest/v1/enkki_datos?id=eq.main&select=productos,ventas",{headers:H});
+    const j=await r.json();
+    if(j&&j[0]&&j[0].productos&&j[0].productos.length>0){
+      state.productos=j[0].productos.map(p=>({...p,costoFijo:COSTOS_FIJOS[p.id]||p.costoFijo||0}));
+      state.ventas=j[0].ventas||[];
+      state.loading=false;render();return;
     }
-  } catch(e) {}
-  // Inicializar con datos base
-  state.productos = PRODS.map(p => ({...p, costoFijo: COSTOS_FIJOS[p.id] || 0, mats:[]}));
-  state.ventas = [];
-  state.loading = false;
-  await guardar();
-  render();
+  }catch(e){}
+  state.productos=PRODS.map(p=>({...p,costoFijo:COSTOS_FIJOS[p.id]||0,mats:[]}));
+  state.ventas=[];state.loading=false;
+  await guardar();render();
 }
 
-async function guardar() {
-  try {
-    await fetch(SUPA_URL+"/rest/v1/enkki_datos?id=eq.main", {
-      method:"PATCH", headers:H,
-      body: JSON.stringify({productos:state.productos, ventas:state.ventas, updated_at:new Date().toISOString()})
-    });
-    const chk = await fetch(SUPA_URL+"/rest/v1/enkki_datos?id=eq.main&select=id",{headers:H});
-    const rows = await chk.json();
-    if (!rows || rows.length===0) {
-      await fetch(SUPA_URL+"/rest/v1/enkki_datos",{method:"POST",headers:{...H,"Prefer":"return=minimal"},body:JSON.stringify({id:"main",productos:state.productos,ventas:state.ventas})});
-    }
-  } catch(e) {}
+async function guardar(){
+  try{
+    await fetch(SUPA_URL+"/rest/v1/enkki_datos?id=eq.main",{method:"PATCH",headers:H,body:JSON.stringify({productos:state.productos,ventas:state.ventas,updated_at:new Date().toISOString()})});
+    const chk=await fetch(SUPA_URL+"/rest/v1/enkki_datos?id=eq.main&select=id",{headers:H});
+    const rows=await chk.json();
+    if(!rows||rows.length===0)await fetch(SUPA_URL+"/rest/v1/enkki_datos",{method:"POST",headers:{...H,"Prefer":"return=minimal"},body:JSON.stringify({id:"main",productos:state.productos,ventas:state.ventas})});
+  }catch(e){}
 }
 
-// RENDER
-function render() {
-  const c = document.getElementById("content");
-  if (state.loading) { c.innerHTML = '<div style="text-align:center;padding:60px;color:#c9a84c;font-family:Georgia,serif;font-size:20px">Cargando...</div>'; return; }
-  if (tabActual==="stock") c.innerHTML = renderStock();
-  else if (tabActual==="vender") { c.innerHTML = renderVender(); renderCarrito(); }
-  else if (tabActual==="costos") c.innerHTML = renderCostos();
-  else c.innerHTML = renderHistorial();
+function render(){
+  const c=document.getElementById("content");
+  if(state.loading){c.innerHTML='<div style="text-align:center;padding:60px;color:#c9a84c;font-family:Georgia,serif;font-size:20px">Cargando...</div>';return;}
+  if(tabActual==="stock"){c.innerHTML=renderStock();renderListaStock();}
+  else if(tabActual==="vender"){c.innerHTML=renderVender();renderCarrito();}
+  else if(tabActual==="costos"){c.innerHTML=renderCostos();if(!selCosto)renderListaCostos();}
+  else c.innerHTML=renderHistorial();
 }
 
-// STOCK
-function renderStock() {
-  const cats = ["Pantallas","Faroles","Direccionales","Terrarios","Sal","Vitro","Fanales","Geometría"];
-  const total = state.productos.reduce((s,p)=>s+p.stock*p.pMen,0);
-  const lista = busqStock.length>1
-    ? state.productos.filter(p=>p.n.toLowerCase().includes(busqStock.toLowerCase())||p.id.includes(busqStock))
-    : state.productos.filter(p=>p.cat===catActiva);
-
+// ── STOCK ──────────────────────────────────────────────────────────────
+function renderStock(){
+  const total=state.productos.reduce((s,p)=>s+p.stock*p.pMen,0);
   return `
   <div class="total-box">
     <div style="color:#c9a84c;font-size:10px;letter-spacing:2px">VALOR TOTAL STOCK (MINORISTA)</div>
     <div style="color:#f0e0c0;font-size:24px;font-family:Georgia,serif;font-weight:700;margin-top:3px">${fmt(total)}</div>
   </div>
-  <input type="search" placeholder="🔍 Buscar producto o código..." value="${busqStock}" oninput="busqStock=this.value;render()" style="margin-bottom:12px">
-  ${busqStock.length<2?`<div class="cats">${cats.map(c=>`<button class="cat-btn${c===catActiva?' active':''}" onclick="catActiva='${c}';render()">${c}</button>`).join('')}</div>`:''}
-  ${lista.map(p=>{
-    const alerta = p.stock===0;
-    const bajo = p.stock>0&&p.stock<=5;
-    return `<div class="card${alerta?' alert':bajo?' warn':''}">
+  <input class="search-input" type="search" placeholder="🔍 Buscar producto o código..." autocomplete="off" oninput="onBusqStock(this.value)">
+  <div id="cats-box"></div>
+  <div id="lista-stock"></div>
+  ${editando?renderModalEdit():''}`;
+}
+
+function onBusqStock(val){
+  const lista=val.length>1
+    ?state.productos.filter(p=>p.n.toLowerCase().includes(val.toLowerCase())||p.id.includes(val))
+    :state.productos.filter(p=>p.cat===catActiva);
+  const catsBox=document.getElementById("cats-box");
+  if(catsBox)catsBox.innerHTML=val.length<2?`<div class="cats">${CATS.map(c=>`<button class="cat-btn${c===catActiva?" active":""}" onclick="catActiva='${c}';onBusqStock('')">${c}</button>`).join("")}</div>`:"";
+  const box=document.getElementById("lista-stock");
+  if(box)box.innerHTML=renderProductosList(lista);
+}
+
+function renderListaStock(){
+  const catsBox=document.getElementById("cats-box");
+  if(catsBox)catsBox.innerHTML=`<div class="cats">${CATS.map(c=>`<button class="cat-btn${c===catActiva?" active":""}" onclick="catActiva='${c}';renderListaStock()">${c}</button>`).join("")}</div>`;
+  const box=document.getElementById("lista-stock");
+  const lista=state.productos.filter(p=>p.cat===catActiva);
+  if(box)box.innerHTML=renderProductosList(lista);
+}
+
+function renderProductosList(lista){
+  return lista.map(p=>{
+    const a=p.stock===0,b=p.stock>0&&p.stock<=5;
+    return `<div class="card${a?" alert":b?" warn":""}">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div style="flex:1">
           <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px">
             <span class="tag" style="background:#2a2a2a;color:#c9a84c">${p.id}</span>
-            ${alerta?'<span class="tag" style="background:#c0392b22;color:#e74c3c">SIN STOCK</span>':''}
-            ${bajo?'<span class="tag" style="background:#c9a84c22;color:#c9a84c">POCO</span>':''}
+            ${a?'<span class="tag" style="background:#c0392b22;color:#e74c3c">SIN STOCK</span>':""}
+            ${b?'<span class="tag" style="background:#c9a84c22;color:#c9a84c">POCO</span>':""}
           </div>
           <div style="font-size:14px;font-weight:600;margin-bottom:3px">${p.n}</div>
           <div style="font-size:12px;color:#666">May: <span style="color:#aaa">${fmt(p.pMay)}</span> &nbsp; Men: <span style="color:#c9a84c">${fmt(p.pMen)}</span></div>
         </div>
         <div style="display:flex;align-items:center;gap:10px;margin-left:10px">
           <div style="text-align:center">
-            <div style="font-size:22px;font-weight:800;color:${alerta?'#e74c3c':bajo?'#c9a84c':'#f0e0c0'};font-family:Georgia,serif">${p.stock}</div>
+            <div style="font-size:22px;font-weight:800;color:${a?"#e74c3c":b?"#c9a84c":"#f0e0c0"};font-family:Georgia,serif">${p.stock}</div>
             <div style="font-size:9px;color:#444">uds</div>
           </div>
           <button class="btn-sm" onclick="abrirEdit('${p.id}')">✏️</button>
         </div>
       </div>
     </div>`;
-  }).join('')}
-  ${editando?renderModalEdit():''}`;
+  }).join("");
 }
 
-function renderModalEdit() {
-  const p = state.productos.find(x=>x.id===editando);
-  if(!p) return '';
-  return `<div class="modal-bg" onclick="if(event.target===this)editando=null,render()">
+function renderModalEdit(){
+  const p=state.productos.find(x=>x.id===editando);
+  if(!p)return"";
+  return `<div class="modal-bg" onclick="if(event.target===this){editando=null;render()}">
     <div class="modal">
       <h3>${p.id} — ${p.n}</h3>
-      <label class="label">Stock actual</label>
-      <input type="number" id="e_stock" value="${p.stock}">
-      <label class="label">Precio mayorista</label>
-      <input type="number" id="e_pmay" value="${p.pMay}">
-      <label class="label">Precio minorista</label>
-      <input type="number" id="e_pmen" value="${p.pMen}">
-      <br><br>
+      <label class="field-label">Stock actual</label>
+      <input class="search-input" type="number" id="e_stock" value="${p.stock}">
+      <label class="field-label">Precio mayorista</label>
+      <input class="search-input" type="number" id="e_pmay" value="${p.pMay}">
+      <label class="field-label">Precio minorista</label>
+      <input class="search-input" type="number" id="e_pmen" value="${p.pMen}">
+      <br>
       <button class="btn-gold" onclick="guardarEdit('${p.id}')">Guardar</button>
     </div>
   </div>`;
 }
 
-function abrirEdit(id) { editando=id; render(); }
-function guardarEdit(id) {
-  const stock = +document.getElementById('e_stock').value;
-  const pMay = +document.getElementById('e_pmay').value;
-  const pMen = +document.getElementById('e_pmen').value;
-  state.productos = state.productos.map(p=>p.id===id?{...p,stock,pMay,pMen}:p);
-  editando=null; guardar(); render();
+function abrirEdit(id){editando=id;render();}
+function guardarEdit(id){
+  const stock=+document.getElementById("e_stock").value;
+  const pMay=+document.getElementById("e_pmay").value;
+  const pMen=+document.getElementById("e_pmen").value;
+  state.productos=state.productos.map(p=>p.id===id?{...p,stock,pMay,pMen}:p);
+  editando=null;guardar();render();
 }
 
-// VENDER
-function renderVender() {
+// ── VENDER ─────────────────────────────────────────────────────────────
+function renderVender(){
   return `
-  ${window._vOk?'<div class="success">✓ Venta registrada — stock actualizado</div>':''}
+  ${window._vOk?'<div class="success">✓ Venta registrada — stock actualizado</div>':""}
   <div style="display:flex;gap:8px;margin-bottom:14px">
-    <button onclick="canal='men';renderCarrito()" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;font-size:13px;background:${canal==='men'?'#c9a84c':'#222'};color:${canal==='men'?'#111':'#666'}">🏠 Minorista</button>
-    <button onclick="canal='may';renderCarrito()" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;font-size:13px;background:${canal==='may'?'#c9a84c':'#222'};color:${canal==='may'?'#111':'#666'}">📦 Mayorista</button>
+    <button onclick="canal='men';renderCarrito()" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;font-size:13px;background:${canal==="men"?"#c9a84c":"#222"};color:${canal==="men"?"#111":"#666"}">🏠 Minorista</button>
+    <button onclick="canal='may';renderCarrito()" style="flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-weight:700;font-size:13px;background:${canal==="may"?"#c9a84c":"#222"};color:${canal==="may"?"#111":"#666"}">📦 Mayorista</button>
   </div>
   <div style="position:relative;margin-bottom:14px">
-    <input type="search" id="busq-vender" placeholder="Buscar producto para agregar..." autocomplete="off" oninput="onBusqVender(this.value)" style="width:100%;background:#242424;border:1px solid #333;border-radius:10px;padding:10px 13px;color:#f0e0c0;font-size:15px">
-    <div id="sugerencias-box"></div>
+    <input class="search-input" type="search" id="busq-vender" placeholder="Buscar producto para agregar..." autocomplete="off" oninput="onBusqVender(this.value)" style="margin-bottom:0">
+    <div id="suger-box" style="position:relative;z-index:10"></div>
   </div>
   <div id="carrito-box"></div>`;
 }
 
-function renderCarrito() {
-  // Actualizar botones canal
-  document.querySelectorAll('.canal-btn').forEach(b => {
-    b.style.background = b.dataset.canal === canal ? '#c9a84c' : '#222';
-    b.style.color = b.dataset.canal === canal ? '#111' : '#666';
-  });
-  const box = document.getElementById('carrito-box');
-  if(!box) return;
-  const total = carrito.reduce((s,c)=>s+c.qty*(canal==="men"?c.pMen:c.pMay),0);
-  if(carrito.length===0) { box.innerHTML='<div style="text-align:center;color:#444;padding:40px 0;font-size:14px">Buscá un producto para empezar</div>'; return; }
-  box.innerHTML = carrito.map(c=>{
-    const precio = canal==="men"?c.pMen:c.pMay;
-    const stockReal = state.productos.find(p=>p.id===c.id)?.stock||0;
-    const sinStock = c.qty>stockReal;
-    return `<div class="card${sinStock?' alert':''}" style="margin-bottom:8px">
+function onBusqVender(val){
+  const sugs=val.length>=2?state.productos.filter(p=>p.n.toLowerCase().includes(val.toLowerCase())||p.id.includes(val)).slice(0,5):[];
+  const sb=document.getElementById("suger-box");
+  if(sb)sb.innerHTML=sugs.length?`<div style="background:#1e1e1e;border:1px solid #333;border-radius:10px;overflow:hidden">${sugs.map(p=>`<button onclick="agregarCarrito('${p.id}')" style="width:100%;background:transparent;border:none;border-bottom:1px solid #2a2a2a;padding:10px 13px;color:#f0e0c0;cursor:pointer;text-align:left;display:flex;justify-content:space-between"><span><span style="color:#c9a84c;font-size:11px;margin-right:6px">${p.id}</span>${p.n}</span><span style="color:#555;font-size:12px">stock:${p.stock}</span></button>`).join("")}</div>`:"";
+}
+
+function renderCarrito(){
+  const box=document.getElementById("carrito-box");
+  if(!box)return;
+  const total=carrito.reduce((s,c)=>s+c.qty*(canal==="men"?c.pMen:c.pMay),0);
+  if(!carrito.length){box.innerHTML='<div style="text-align:center;color:#444;padding:40px 0;font-size:14px">Buscá un producto para empezar</div>';return;}
+  box.innerHTML=carrito.map(c=>{
+    const precio=canal==="men"?c.pMen:c.pMay;
+    const sr=state.productos.find(p=>p.id===c.id)?.stock||0;
+    const si=c.qty>sr;
+    return `<div class="card${si?" alert":""}" style="margin-bottom:8px">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div><span style="color:#c9a84c;font-size:11px">${c.id}</span> <span style="font-size:14px;font-weight:600">${c.n}</span></div>
         <span style="color:#c9a84c;font-weight:700">${fmt(precio*c.qty)}</span>
       </div>
-      ${sinStock?`<div style="color:#e74c3c;font-size:11px;margin-top:3px">⚠ Stock insuficiente (hay ${stockReal})</div>`:''}
+      ${si?`<div style="color:#e74c3c;font-size:11px;margin-top:3px">⚠ Stock insuficiente (hay ${sr})</div>`:""}
       <div class="qty-row">
         <button class="qty-btn" onclick="cambiarQty('${c.id}',-1)">−</button>
         <span style="font-weight:700;min-width:28px;text-align:center">${c.qty}</span>
@@ -329,9 +300,9 @@ function renderCarrito() {
         <span style="color:#555;font-size:12px">${fmt(precio)} c/u</span>
       </div>
     </div>`;
-  }).join('') + `
+  }).join("")+`
   <div style="background:#1e1407;border:1px solid #c9a84c33;border-radius:12px;padding:13px 16px;margin:14px 0;display:flex;justify-content:space-between;align-items:center">
-    <span style="color:#888">Total ${canal==='men'?'minorista':'mayorista'}</span>
+    <span style="color:#888">Total ${canal==="men"?"minorista":"mayorista"}</span>
     <span style="color:#c9a84c;font-size:22px;font-weight:700;font-family:Georgia,serif">${fmt(total)}</span>
   </div>
   <div style="display:flex;gap:10px;margin-bottom:10px">
@@ -341,104 +312,64 @@ function renderCarrito() {
   <button onclick="enviarWsp()" style="width:100%;background:#1a3a1a;color:#25d366;border:1px solid #25d36644;border-radius:11px;padding:13px;font-size:15px;font-weight:700;cursor:pointer">💬 Enviar presupuesto por WhatsApp</button>`;
 }
 
-function onBusqVender(val) {
-  busqVender = val;
-  const sugerencias = val.length>=2
-    ? state.productos.filter(p=>p.n.toLowerCase().includes(val.toLowerCase())||p.id.includes(val)).slice(0,5)
-    : [];
-  const sb = document.getElementById('sugerencias-box');
-  if(!sb) return;
-  if(sugerencias.length===0) { sb.innerHTML=''; return; }
-  sb.innerHTML = `<div style="position:absolute;top:0;left:0;right:0;background:#1e1e1e;border:1px solid #333;border-radius:10px;z-index:10;overflow:hidden">
-    ${sugerencias.map(p=>`<button onclick="agregarCarrito('${p.id}')" style="width:100%;background:transparent;border:none;border-bottom:1px solid #2a2a2a;padding:10px 13px;color:#f0e0c0;cursor:pointer;text-align:left;display:flex;justify-content:space-between"><span><span style="color:#c9a84c;font-size:11px;margin-right:6px">${p.id}</span>${p.n}</span><span style="color:#555;font-size:12px">stock:${p.stock}</span></button>`).join('')}
-  </div>`;
-}
-
-function renderCarritoInner() {
-  const total = carrito.reduce((s,c)=>s+c.qty*(canal==="men"?c.pMen:c.pMay),0);
-  if(carrito.length===0) return '<div style="text-align:center;color:#444;padding:30px 0;font-size:14px">Buscá un producto para empezar</div>';
-  return carrito.map(c=>{
-    const precio = canal==="men"?c.pMen:c.pMay;
-    const stockReal = state.productos.find(p=>p.id===c.id)?.stock||0;
-    const sinStock = c.qty>stockReal;
-    return `<div class="card${sinStock?' alert':''}" style="margin-bottom:8px">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div><span style="color:#c9a84c;font-size:11px">${c.id}</span> <span style="font-size:14px;font-weight:600">${c.n}</span></div>
-        <span style="color:#c9a84c;font-weight:700">${fmt(precio*c.qty)}</span>
-      </div>
-      ${sinStock?`<div style="color:#e74c3c;font-size:11px;margin-top:3px">⚠ Stock insuficiente (hay ${stockReal})</div>`:''}
-      <div class="qty-row">
-        <button class="qty-btn" onclick="cambiarQty('${c.id}',-1)">−</button>
-        <span style="font-weight:700;min-width:28px;text-align:center">${c.qty}</span>
-        <button class="qty-btn" onclick="cambiarQty('${c.id}',1)">+</button>
-        <span style="color:#555;font-size:12px">${fmt(precio)} c/u</span>
-      </div>
-    </div>`;
-  }).join('') + `
-  <div style="background:#1e1407;border:1px solid #c9a84c33;border-radius:12px;padding:13px 16px;margin:14px 0;display:flex;justify-content:space-between;align-items:center">
-    <span style="color:#888">Total ${canal==='men'?'minorista':'mayorista'}</span>
-    <span style="color:#c9a84c;font-size:22px;font-weight:700;font-family:Georgia,serif">${fmt(total)}</span>
-  </div>
-  <div style="display:flex;gap:10px;margin-bottom:10px">
-    <button class="btn-dark" onclick="carrito=[];render()" style="flex:1">Cancelar</button>
-    <button class="btn-gold" onclick="confirmarVenta()" style="flex:2">Registrar venta</button>
-  </div>
-  <button onclick="enviarWsp()" style="width:100%;background:#1a3a1a;color:#25d366;border:1px solid #25d36644;border-radius:11px;padding:13px;font-size:15px;font-weight:700;cursor:pointer">💬 Enviar presupuesto por WhatsApp</button>`;
-}
-
-function agregarCarrito(id) {
-  busqVender='';
-  const p = state.productos.find(x=>x.id===id);
-  const ex = carrito.find(c=>c.id===id);
-  if(ex) carrito = carrito.map(c=>c.id===id?{...c,qty:c.qty+1}:c);
+function agregarCarrito(id){
+  const p=state.productos.find(x=>x.id===id);
+  const ex=carrito.find(c=>c.id===id);
+  if(ex)carrito=carrito.map(c=>c.id===id?{...c,qty:c.qty+1}:c);
   else carrito.push({...p,qty:1});
-  // Limpiar buscador y sugerencias sin perder foco
-  const inp = document.getElementById('busq-vender');
-  if(inp) inp.value='';
-  const sb = document.getElementById('sugerencias-box');
-  if(sb) sb.innerHTML='';
+  const inp=document.getElementById("busq-vender");
+  if(inp)inp.value="";
+  const sb=document.getElementById("suger-box");
+  if(sb)sb.innerHTML="";
   renderCarrito();
 }
-function cambiarQty(id,d) {
-  carrito = carrito.map(c=>c.id===id?{...c,qty:Math.max(0,c.qty+d)}:c).filter(c=>c.qty>0);
+
+function cambiarQty(id,d){
+  carrito=carrito.map(c=>c.id===id?{...c,qty:Math.max(0,c.qty+d)}:c).filter(c=>c.qty>0);
   renderCarrito();
 }
-function confirmarVenta() {
-  const venta = {
-    id:Date.now(), fecha:new Date().toLocaleDateString("es-AR"),
-    hora:new Date().toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"}),
-    canal, items:carrito.map(c=>({id:c.id,nombre:c.n,qty:c.qty,precio:canal==="men"?c.pMen:c.pMay})),
-    total:carrito.reduce((s,c)=>s+c.qty*(canal==="men"?c.pMen:c.pMay),0)
-  };
-  state.productos = state.productos.map(p=>{
-    const it=carrito.find(c=>c.id===p.id);
-    return it?{...p,stock:Math.max(0,p.stock-it.qty)}:p;
-  });
-  state.ventas = [venta,...state.ventas];
-  carrito=[]; guardar();
-  window._vOk=true; render();
-  setTimeout(()=>{window._vOk=false; if(tabActual==='vender') render();},3000);
+
+function confirmarVenta(){
+  const total=carrito.reduce((s,c)=>s+c.qty*(canal==="men"?c.pMen:c.pMay),0);
+  const venta={id:Date.now(),fecha:new Date().toLocaleDateString("es-AR"),hora:new Date().toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"}),canal,items:carrito.map(c=>({id:c.id,nombre:c.n,qty:c.qty,precio:canal==="men"?c.pMen:c.pMay})),total};
+  state.productos=state.productos.map(p=>{const it=carrito.find(c=>c.id===p.id);return it?{...p,stock:Math.max(0,p.stock-it.qty)}:p;});
+  state.ventas=[venta,...state.ventas];
+  carrito=[];guardar();
+  window._vOk=true;render();
+  setTimeout(()=>{window._vOk=false;},3000);
 }
-function enviarWsp() {
-  const total = carrito.reduce((s,c)=>s+c.qty*(canal==="men"?c.pMen:c.pMay),0);
-  let msg = "✨ *ENKKI* — Iluminación & Decoración\n━━━━━━━━━━━━━━━━━━\n\n";
-  msg += `📋 *Presupuesto ${canal==="men"?"Minorista":"Mayorista"}*\n📅 ${new Date().toLocaleDateString("es-AR")}\n\n*Detalle:*\n`;
-  carrito.forEach(c=>{ const p=canal==="men"?c.pMen:c.pMay; msg+=`• ${c.qty}× ${c.n} — $${(p*c.qty).toLocaleString("es-AR")}\n`; });
-  msg += `\n━━━━━━━━━━━━━━━━━━\n💰 *TOTAL: $${total.toLocaleString("es-AR")}*\n━━━━━━━━━━━━━━━━━━\n\n🔦 Fabricación artesanal en chapa y vidrio\n📱 3415824371\n🌐 enkki.netlify.app\n\n_La antítesis del plástico_ 🖤`;
+
+function enviarWsp(){
+  const total=carrito.length?carrito.reduce((s,c)=>s+c.qty*(canal==="men"?c.pMen:c.pMay),0):0;
+  let msg="✨ *ENKKI* — Iluminación & Decoración\n━━━━━━━━━━━━━━━━━━\n\n";
+  msg+=`📋 *Presupuesto ${canal==="men"?"Minorista":"Mayorista"}*\n📅 ${new Date().toLocaleDateString("es-AR")}\n\n*Detalle:*\n`;
+  carrito.forEach(c=>{const p=canal==="men"?c.pMen:c.pMay;msg+=`• ${c.qty}× ${c.n} — $${(p*c.qty).toLocaleString("es-AR")}\n`;});
+  msg+=`\n━━━━━━━━━━━━━━━━━━\n💰 *TOTAL: $${total.toLocaleString("es-AR")}*\n━━━━━━━━━━━━━━━━━━\n\n🔦 Fabricación artesanal en chapa y vidrio\n📱 3415824371\n🌐 enkki.netlify.app\n\n_La antítesis del plástico_ 🖤`;
   window.open("https://wa.me/?text="+encodeURIComponent(msg),"_blank");
 }
 
-// COSTOS
-function renderCostos() {
-  if(selCosto) return renderDetalleCosto();
-  const lista = busqCosto.length>1
-    ? state.productos.filter(p=>p.n.toLowerCase().includes(busqCosto.toLowerCase())||p.id.includes(busqCosto))
-    : state.productos;
-  return `
-  <input type="search" placeholder="🔍 Buscar producto..." value="${busqCosto}" oninput="busqCosto=this.value;render()" style="margin-bottom:12px">
-  ${lista.map(p=>{
-    const costo = (p.costoFijo||0) + (p.mats||[]).reduce((s,m)=>s+m.qty*m.costo,0);
-    const margen = costo>0?((p.pMen-costo)/p.pMen*100).toFixed(0):null;
+// ── COSTOS ─────────────────────────────────────────────────────────────
+function renderCostos(){
+  if(selCosto)return renderDetalleCosto();
+  return `<input class="search-input" type="search" placeholder="🔍 Buscar producto..." autocomplete="off" oninput="onBusqCosto(this.value)">
+  <div id="lista-costos"></div>`;
+}
+
+function onBusqCosto(val){
+  const lista=val.length>1?state.productos.filter(p=>p.n.toLowerCase().includes(val.toLowerCase())||p.id.includes(val)):state.productos;
+  const box=document.getElementById("lista-costos");
+  if(box)box.innerHTML=renderCostosList(lista);
+}
+
+function renderListaCostos(){
+  const box=document.getElementById("lista-costos");
+  if(box)box.innerHTML=renderCostosList(state.productos);
+}
+
+function renderCostosList(lista){
+  return lista.map(p=>{
+    const costo=(p.costoFijo||0)+(p.mats||[]).reduce((s,m)=>s+m.qty*m.costo,0);
+    const margen=costo>0?((p.pMen-costo)/p.pMen*100).toFixed(0):null;
     return `<button onclick="selCosto='${p.id}';render()" style="width:100%;background:#1c1c1c;border:1px solid #2a2a2a;border-radius:14px;padding:12px 14px;text-align:left;cursor:pointer;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
       <div>
         <span style="color:#c9a84c;font-size:10px;margin-right:6px">${p.id}</span>
@@ -449,17 +380,20 @@ function renderCostos() {
         ${costo>0?`<div style="color:#e74c3c;font-size:13px;font-weight:600">${fmt(costo)}</div><div style="color:#27ae60;font-size:11px">margen ${margen}%</div>`:'<div style="color:#333;font-size:12px">Sin costo</div>'}
       </div>
     </button>`;
-  }).join('')}`;
+  }).join("");
 }
 
-function renderDetalleCosto() {
-  const p = state.productos.find(x=>x.id===selCosto);
-  if(!p) return '';
-  const costoFijo = p.costoFijo||0;
-  const costoMats = (p.mats||[]).reduce((s,m)=>s+m.qty*m.costo,0);
-  const costo = costoFijo+costoMats;
-  const mMen = costo>0?((p.pMen-costo)/p.pMen*100).toFixed(0):"—";
-  const mMay = costo>0?((p.pMay-costo)/p.pMay*100).toFixed(0):"—";
+function renderDetalleCosto(){
+  const p=state.productos.find(x=>x.id===selCosto);
+  if(!p)return"";
+  const cf=p.costoFijo||0;
+  const cm=(p.mats||[]).reduce((s,m)=>s+m.qty*m.costo,0);
+  const costo=cf+cm;
+  const mMen=costo>0?((p.pMen-costo)/p.pMen*100).toFixed(0):"—";
+  const mMay=costo>0?((p.pMay-costo)/p.pMay*100).toFixed(0):"—";
+  const mo=p.margenObj||50;
+  const pSug=Math.round(costo*(1+mo/100));
+  const ganancia=Math.round(costo*mo/100);
   return `
   <button class="btn-sm" onclick="selCosto=null;render()" style="margin-bottom:14px">← Volver</button>
   <div class="card" style="margin-bottom:14px">
@@ -471,89 +405,80 @@ function renderDetalleCosto() {
     <div class="stat-box"><div style="color:#27ae60;font-size:14px;font-weight:700">${mMen}%</div><div style="color:#555;font-size:10px;margin-top:2px">Margen Men</div></div>
     <div class="stat-box"><div style="color:#3498db;font-size:14px;font-weight:700">${mMay}%</div><div style="color:#555;font-size:10px;margin-top:2px">Margen May</div></div>
   </div>
-  ${costoFijo>0?`<div class="card" style="margin-bottom:8px"><div style="color:#f0e0c0;font-size:13px;font-weight:600">Costo base precargado</div><div style="color:#c9a84c;font-weight:700">${fmt(costoFijo)}</div></div>`:''}
-  
+  ${cf>0?`<div class="card" style="margin-bottom:8px"><div style="color:#f0e0c0;font-size:13px;font-weight:600">Costo base</div><div style="color:#c9a84c;font-weight:700">${fmt(cf)}</div></div>`:""}
   ${costo>0?`
   <div class="card" style="margin-bottom:14px;border-color:#c9a84c33">
     <div style="color:#666;font-size:11px;letter-spacing:1px;margin-bottom:12px">🎯 CALCULAR PRECIO POR MARGEN</div>
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-      <button onclick="ajustarMargen('${p.id}',-5)" style="background:#2a2a2a;border:none;border-radius:8px;padding:8px 14px;color:#f0e0c0;cursor:pointer;font-size:16px;font-weight:700">−</button>
+      <button onclick="ajustarMargen('${p.id}',-5)" style="background:#2a2a2a;border:none;border-radius:8px;padding:8px 16px;color:#f0e0c0;cursor:pointer;font-size:18px;font-weight:700">−</button>
       <div style="flex:1;text-align:center">
-        <div style="color:#c9a84c;font-size:28px;font-weight:700;font-family:Georgia,serif">${p.margenObj||50}%</div>
+        <div style="color:#c9a84c;font-size:30px;font-weight:700;font-family:Georgia,serif">${mo}%</div>
         <div style="color:#555;font-size:11px">margen objetivo</div>
       </div>
-      <button onclick="ajustarMargen('${p.id}',5)" style="background:#2a2a2a;border:none;border-radius:8px;padding:8px 14px;color:#f0e0c0;cursor:pointer;font-size:16px;font-weight:700">+</button>
+      <button onclick="ajustarMargen('${p.id}',5)" style="background:#2a2a2a;border:none;border-radius:8px;padding:8px 16px;color:#f0e0c0;cursor:pointer;font-size:18px;font-weight:700">+</button>
     </div>
     <div style="background:#1a1a1a;border-radius:10px;padding:12px;margin-bottom:10px">
-      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-        <span style="color:#666;font-size:13px">Costo</span>
-        <span style="color:#e74c3c;font-weight:600">${fmt(costo)}</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-        <span style="color:#666;font-size:13px">Ganancia</span>
-        <span style="color:#27ae60;font-weight:600">${fmt(Math.round(costo * (p.margenObj||50) / 100))}</span>
-      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:#666;font-size:13px">Costo</span><span style="color:#e74c3c;font-weight:600">${fmt(costo)}</span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:#666;font-size:13px">Ganancia (${mo}%)</span><span style="color:#27ae60;font-weight:600">${fmt(ganancia)}</span></div>
       <div style="border-top:1px solid #2a2a2a;margin-top:6px;padding-top:8px;display:flex;justify-content:space-between">
         <span style="color:#f0e0c0;font-size:14px;font-weight:700">Precio sugerido</span>
-        <span style="color:#c9a84c;font-size:18px;font-weight:700;font-family:Georgia,serif">${fmt(Math.round(costo * (1 + (p.margenObj||50)/100)))}</span>
+        <span style="color:#c9a84c;font-size:18px;font-weight:700;font-family:Georgia,serif">${fmt(pSug)}</span>
       </div>
     </div>
-    <button onclick="aplicarPrecio('${p.id}',${Math.round(costo * (1 + (p.margenObj||50)/100))})" style="width:100%;background:#c9a84c;color:#111;border:none;border-radius:10px;padding:11px;font-size:14px;font-weight:700;cursor:pointer">Aplicar como precio minorista</button>
-  </div>
-  `:''}
-
+    <button onclick="aplicarPrecio('${p.id}',${pSug})" id="btn-aplicar" style="width:100%;background:#c9a84c;color:#111;border:none;border-radius:10px;padding:11px;font-size:14px;font-weight:700;cursor:pointer">Aplicar como precio minorista</button>
+  </div>`:""}
   <div style="color:#555;font-size:11px;letter-spacing:1px;margin-bottom:8px">MATERIALES EXTRA</div>
-  ${(p.mats||[]).length===0?'<div style="color:#444;font-size:13px;text-align:center;padding:20px">Sin materiales extra</div>':''}
+  ${!(p.mats||[]).length?'<div style="color:#444;font-size:13px;text-align:center;padding:16px">Sin materiales extra</div>':""}
   ${(p.mats||[]).map(m=>`<div class="card" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
     <div><div style="color:#f0e0c0;font-size:13px;font-weight:600">${m.nombre}</div><div style="color:#555;font-size:11px">${m.qty} ${m.unidad} × ${fmt(m.costo)}</div></div>
     <div style="display:flex;align-items:center;gap:8px"><span style="color:#c9a84c;font-weight:700">${fmt(m.qty*m.costo)}</span>
     <button onclick="eliminarMat('${p.id}',${m.id})" style="background:#2a2a2a;border:none;border-radius:6px;padding:5px 8px;color:#e74c3c;cursor:pointer">✕</button></div>
-  </div>`).join('')}
+  </div>`).join("")}
   <div class="card" style="border-color:#c9a84c22;margin-top:14px">
     <div style="color:#666;font-size:11px;letter-spacing:1px;margin-bottom:10px">+ AGREGAR MATERIAL</div>
-    <input type="text" id="m_nombre" placeholder="Nombre (ej: Chapa 0.8mm)" style="margin-bottom:8px">
+    <input class="search-input" type="text" id="m_nombre" placeholder="Nombre (ej: Chapa 0.8mm)">
     <div class="grid3">
-      <input type="number" id="m_qty" placeholder="Cant.">
-      <input type="text" id="m_unidad" placeholder="Unidad">
-      <input type="number" id="m_costo" placeholder="$ costo">
+      <input class="search-input" type="number" id="m_qty" placeholder="Cant." style="margin-bottom:0">
+      <input class="search-input" type="text" id="m_unidad" placeholder="Unidad" style="margin-bottom:0">
+      <input class="search-input" type="number" id="m_costo" placeholder="$ costo" style="margin-bottom:0">
     </div>
+    <br>
     <button class="btn-gold" onclick="agregarMat('${p.id}')">Agregar material</button>
   </div>`;
 }
 
-function ajustarMargen(id, delta) {
-  state.productos = state.productos.map(p => p.id!==id ? p : {...p, margenObj: Math.max(1, Math.min(500, (p.margenObj||50) + delta))});
-  guardar(); selCosto=id; render();
+function ajustarMargen(id,delta){
+  state.productos=state.productos.map(p=>p.id!==id?p:{...p,margenObj:Math.max(1,Math.min(500,(p.margenObj||50)+delta))});
+  guardar();render();
 }
 
-function aplicarPrecio(id, precio) {
-  state.productos = state.productos.map(p => p.id!==id ? p : {...p, pMen: precio});
+function aplicarPrecio(id,precio){
+  state.productos=state.productos.map(p=>p.id!==id?p:{...p,pMen:precio});
   guardar();
-  // Mostrar confirmación sin perder pantalla
-  const btn = event.target;
-  btn.textContent = '✓ Precio aplicado';
-  btn.style.background = '#27ae60';
-  setTimeout(() => { btn.textContent = 'Aplicar como precio minorista'; btn.style.background = '#c9a84c'; }, 2000);
+  const btn=document.getElementById("btn-aplicar");
+  if(btn){btn.textContent="✓ Precio aplicado";btn.style.background="#27ae60";}
+  setTimeout(()=>{const b=document.getElementById("btn-aplicar");if(b){b.textContent="Aplicar como precio minorista";b.style.background="#c9a84c";}},2000);
 }
 
-function agregarMat(id) {
-  const nombre = document.getElementById('m_nombre').value;
-  const qty = +document.getElementById('m_qty').value||1;
-  const unidad = document.getElementById('m_unidad').value;
-  const costo = +document.getElementById('m_costo').value;
-  if(!nombre||!costo) return;
-  state.productos = state.productos.map(p=>p.id!==id?p:{...p,mats:[...(p.mats||[]),{id:Date.now(),nombre,qty,unidad,costo}]});
-  guardar(); render();
-}
-function eliminarMat(id,mid) {
-  state.productos = state.productos.map(p=>p.id!==id?p:{...p,mats:(p.mats||[]).filter(m=>m.id!==mid)});
-  guardar(); render();
+function agregarMat(id){
+  const nombre=document.getElementById("m_nombre").value;
+  const qty=+document.getElementById("m_qty").value||1;
+  const unidad=document.getElementById("m_unidad").value;
+  const costo=+document.getElementById("m_costo").value;
+  if(!nombre||!costo)return;
+  state.productos=state.productos.map(p=>p.id!==id?p:{...p,mats:[...(p.mats||[]),{id:Date.now(),nombre,qty,unidad,costo}]});
+  guardar();render();
 }
 
-// HISTORIAL
-function renderHistorial() {
-  if(!state.ventas.length) return '<div style="text-align:center;color:#444;padding:60px 0;font-size:14px">Sin ventas registradas todavía.</div>';
-  const total = state.ventas.reduce((s,v)=>s+v.total,0);
+function eliminarMat(id,mid){
+  state.productos=state.productos.map(p=>p.id!==id?p:{...p,mats:(p.mats||[]).filter(m=>m.id!==mid)});
+  guardar();render();
+}
+
+// ── HISTORIAL ───────────────────────────────────────────────────────────
+function renderHistorial(){
+  if(!state.ventas.length)return'<div style="text-align:center;color:#444;padding:60px 0;font-size:14px">Sin ventas registradas todavía.</div>';
+  const total=state.ventas.reduce((s,v)=>s+v.total,0);
   return `
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
     <div class="stat-box"><div style="color:#c9a84c;font-size:19px;font-weight:700;font-family:Georgia,serif">${fmt(total)}</div><div style="color:#555;font-size:10px;margin-top:2px">TOTAL FACTURADO</div></div>
@@ -564,33 +489,31 @@ function renderHistorial() {
       <div>
         <span style="color:#f0e0c0;font-size:13px;font-weight:600">${v.fecha}</span>
         <span style="color:#555;font-size:12px;margin-left:7px">${v.hora}</span>
-        <span class="tag" style="background:${v.canal==='men'?'#c9a84c22':'#3498db22'};color:${v.canal==='men'?'#c9a84c':'#3498db'};margin-left:7px">${v.canal==='men'?'Minorista':'Mayorista'}</span>
+        <span class="tag" style="background:${v.canal==="men"?"#c9a84c22":"#3498db22"};color:${v.canal==="men"?"#c9a84c":"#3498db"};margin-left:7px">${v.canal==="men"?"Minorista":"Mayorista"}</span>
       </div>
       <button onclick="eliminarVenta(${v.id})" style="background:#2a2a2a;border:none;border-radius:6px;padding:4px 8px;color:#555;cursor:pointer">✕</button>
     </div>
-    ${v.items.map(it=>`<div style="display:flex;justify-content:space-between;color:#777;font-size:12px;margin-bottom:3px"><span>${it.qty}× ${it.nombre}</span><span>${fmt(it.precio*it.qty)}</span></div>`).join('')}
+    ${v.items.map(it=>`<div style="display:flex;justify-content:space-between;color:#777;font-size:12px;margin-bottom:3px"><span>${it.qty}× ${it.nombre}</span><span>${fmt(it.precio*it.qty)}</span></div>`).join("")}
     <div style="border-top:1px solid #2a2a2a;margin-top:8px;padding-top:8px;display:flex;justify-content:space-between">
       <span style="color:#666;font-size:13px">Total</span>
       <span style="color:#c9a84c;font-weight:700;font-size:15px">${fmt(v.total)}</span>
     </div>
-  </div>`).join('')}`;
+  </div>`).join("")}`;
 }
 
-function eliminarVenta(id) {
-  state.ventas = state.ventas.filter(v=>v.id!==id);
-  guardar(); render();
+function eliminarVenta(id){
+  state.ventas=state.ventas.filter(v=>v.id!==id);
+  guardar();render();
 }
 
-// TAB NAV
-function showTab(tab) {
-  tabActual=tab; selCosto=null; busqStock=''; busqVender=''; busqCosto='';
-  document.querySelectorAll('.nav button').forEach((b,i)=>{
-    b.className=(['stock','vender','costos','historial'][i]===tab)?'active':'';
+function showTab(tab){
+  tabActual=tab;selCosto=null;
+  document.querySelectorAll(".nav button").forEach((b,i)=>{
+    b.className=(["stock","vender","costos","historial"][i]===tab)?"active":"";
   });
   render();
 }
 
-// INIT
 cargar();
 </script>
 </body>
