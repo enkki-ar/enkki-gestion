@@ -148,36 +148,61 @@ let state={productos:[],ventas:[],categorias:[],loading:true};
 let carrito=[],canal="men",tabActual="stock",catActiva="Pantallas",editando=null,selCosto=null,matError=null;
 let mostrarNuevaLinea=false,mostrarNuevoProd=false,nuevoProdError=null,nuevaLineaError=null,confirmarBorrado=null;
 
+let dataCargadaOk=false;
+
 async function cargar(){
   try{
     const r=await fetch(SUPA_URL+"/rest/v1/enkki_datos?id=eq.main&select=productos,ventas",{headers:H});
+    if(!r.ok)throw new Error("HTTP "+r.status);
     const j=await r.json();
-    if(j&&j[0]&&j[0].productos){
+    if(j&&j.length>0&&j[0]){
       const raw=j[0].productos;
       let items=[],cats=CATS_BASE.slice();
       if(Array.isArray(raw)){items=raw;}
       else if(raw&&Array.isArray(raw.items)){items=raw.items;if(raw.categorias&&raw.categorias.length)cats=raw.categorias;}
-      if(items.length>0){
-        state.productos=items.map(p=>({...p,costoFijo:COSTOS_FIJOS[p.id]||p.costoFijo||0}));
-        state.ventas=j[0].ventas||[];
-        state.categorias=cats;
-        state.loading=false;render();return;
-      }
+      state.productos=items.map(p=>({...p,costoFijo:COSTOS_FIJOS[p.id]||p.costoFijo||0}));
+      state.ventas=j[0].ventas||[];
+      state.categorias=cats;
+      dataCargadaOk=true;
+      window._saveErr=false;
+      state.loading=false;render();return;
     }
-  }catch(e){}
-  state.productos=PRODS.map(p=>({...p,costoFijo:COSTOS_FIJOS[p.id]||0,mats:[]}));
-  state.ventas=[];state.categorias=CATS_BASE.slice();state.loading=false;
-  await guardar();render();
+    // No existe fila todavía: primera vez que se usa la app, es seguro sembrar datos de fábrica.
+    state.productos=PRODS.map(p=>({...p,costoFijo:COSTOS_FIJOS[p.id]||0,mats:[]}));
+    state.ventas=[];state.categorias=CATS_BASE.slice();
+    dataCargadaOk=true;
+    state.loading=false;
+    await guardar();render();
+  }catch(e){
+    // Fallo de red/servidor: NUNCA pisar los datos reales. Mostramos aviso y no dejamos guardar hasta reconectar.
+    dataCargadaOk=false;
+    window._saveErr=true;
+    window._loadErr=true;
+    state.productos=state.productos&&state.productos.length?state.productos:PRODS.map(p=>({...p,costoFijo:COSTOS_FIJOS[p.id]||0,mats:[]}));
+    state.categorias=state.categorias&&state.categorias.length?state.categorias:CATS_BASE.slice();
+    state.loading=false;render();
+  }
 }
 
 async function guardar(){
+  if(!dataCargadaOk){window._saveErr=true;window._loadErr=true;render();return;}
   try{
     const payloadProductos={items:state.productos,categorias:state.categorias};
-    await fetch(SUPA_URL+"/rest/v1/enkki_datos?id=eq.main",{method:"PATCH",headers:H,keepalive:true,body:JSON.stringify({productos:payloadProductos,ventas:state.ventas,updated_at:new Date().toISOString()})});
+    const r1=await fetch(SUPA_URL+"/rest/v1/enkki_datos?id=eq.main",{method:"PATCH",headers:H,body:JSON.stringify({productos:payloadProductos,ventas:state.ventas,updated_at:new Date().toISOString()})});
+    if(!r1.ok){mostrarErrorGuardado();return;}
     const chk=await fetch(SUPA_URL+"/rest/v1/enkki_datos?id=eq.main&select=id",{headers:H});
     const rows=await chk.json();
-    if(!rows||rows.length===0)await fetch(SUPA_URL+"/rest/v1/enkki_datos",{method:"POST",headers:{...H,"Prefer":"return=minimal"},keepalive:true,body:JSON.stringify({id:"main",productos:payloadProductos,ventas:state.ventas})});
-  }catch(e){}
+    if(!rows||rows.length===0){
+      const r2=await fetch(SUPA_URL+"/rest/v1/enkki_datos",{method:"POST",headers:{...H,"Prefer":"return=minimal"},body:JSON.stringify({id:"main",productos:payloadProductos,ventas:state.ventas})});
+      if(!r2.ok){mostrarErrorGuardado();return;}
+    }
+    window._saveErr=false;window._loadErr=false;
+  }catch(e){mostrarErrorGuardado();}
+}
+
+function mostrarErrorGuardado(){
+  window._saveErr=true;
+  render();
 }
 
 function agregarLinea(){
@@ -230,10 +255,13 @@ function ejecutarBorrado(id){
 function render(){
   const c=document.getElementById("content");
   if(state.loading){c.innerHTML='<div style="text-align:center;padding:60px;color:#c9a84c;font-family:Georgia,serif;font-size:20px">Cargando...</div>';return;}
-  if(tabActual==="stock"){c.innerHTML=renderStock();renderListaStock();}
-  else if(tabActual==="vender"){c.innerHTML=renderVender();renderCarrito();}
-  else if(tabActual==="costos"){c.innerHTML=renderCostos();if(!selCosto)renderListaCostos();}
-  else c.innerHTML=renderHistorial();
+  let banner="";
+  if(window._loadErr)banner='<div class="error-msg">⚠ No se pudo conectar con la base de datos. Los cambios NO se están guardando. Revisá tu conexión y volvé a abrir la app.</div>';
+  else if(window._saveErr)banner='<div class="error-msg">⚠ Hubo un error al guardar el último cambio. Probá de nuevo.</div>';
+  if(tabActual==="stock"){c.innerHTML=banner+renderStock();renderListaStock();}
+  else if(tabActual==="vender"){c.innerHTML=banner+renderVender();renderCarrito();}
+  else if(tabActual==="costos"){c.innerHTML=banner+renderCostos();if(!selCosto)renderListaCostos();}
+  else c.innerHTML=banner+renderHistorial();
 }
 
 // ── STOCK ──────────────────────────────────────────────────────────────
