@@ -166,10 +166,10 @@ async function cargar(){
 
 async function guardar(){
   try{
-    await fetch(SUPA_URL+"/rest/v1/enkki_datos?id=eq.main",{method:"PATCH",headers:H,body:JSON.stringify({productos:state.productos,ventas:state.ventas,categorias:state.categorias,updated_at:new Date().toISOString()})});
+    await fetch(SUPA_URL+"/rest/v1/enkki_datos?id=eq.main",{method:"PATCH",headers:H,keepalive:true,body:JSON.stringify({productos:state.productos,ventas:state.ventas,categorias:state.categorias,updated_at:new Date().toISOString()})});
     const chk=await fetch(SUPA_URL+"/rest/v1/enkki_datos?id=eq.main&select=id",{headers:H});
     const rows=await chk.json();
-    if(!rows||rows.length===0)await fetch(SUPA_URL+"/rest/v1/enkki_datos",{method:"POST",headers:{...H,"Prefer":"return=minimal"},body:JSON.stringify({id:"main",productos:state.productos,ventas:state.ventas,categorias:state.categorias})});
+    if(!rows||rows.length===0)await fetch(SUPA_URL+"/rest/v1/enkki_datos",{method:"POST",headers:{...H,"Prefer":"return=minimal"},keepalive:true,body:JSON.stringify({id:"main",productos:state.productos,ventas:state.ventas,categorias:state.categorias})});
   }catch(e){}
 }
 
