@@ -44,6 +44,8 @@ input,button{font-family:inherit;outline:none}
 .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px}
 .stat-box{background:#1c1c1c;border-radius:10px;padding:10px;text-align:center}
 .success{background:#1a3a1a;border:1px solid #27ae60;border-radius:10px;padding:11px 14px;margin-bottom:14px;color:#27ae60;font-weight:600;font-size:14px}
+.error-msg{background:#3a1a1a;border:1px solid #c0392b;border-radius:10px;padding:11px 14px;margin-bottom:14px;color:#e74c3c;font-weight:600;font-size:13px}
+.cat-add{flex-shrink:0;padding:5px 13px;border-radius:18px;border:1px dashed #444;cursor:pointer;font-size:12px;font-weight:600;background:transparent;color:#666}
 </style>
 </head>
 <body>
@@ -60,7 +62,7 @@ const SUPA_URL="https://mnpxqfuniizefnkzhszy.supabase.co";
 const SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ucHhxZnVuaWl6ZWZua3poc3p5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMjQwMDksImV4cCI6MjA5NDkwMDAwOX0.jsJ4dg0r0jQv2pEPPosoeM1eXlS1m5k2xy3CiATRPBU";
 const H={"Content-Type":"application/json","apikey":SUPA_KEY,"Authorization":"Bearer "+SUPA_KEY};
 const fmt=n=>"$"+Number(n).toLocaleString("es-AR");
-const CATS=["Pantallas","Faroles","Direccionales","Terrarios","Sal","Vitro","Fanales","Geometría"];
+const CATS_BASE=["Pantallas","Faroles","Direccionales","Terrarios","Sal","Vitro","Fanales","Geometría"];
 const COSTOS_FIJOS={"200":8329,"210":11000,"201":8329,"211":12333,"221":36071,"202":8000,"212":8329,"203":8000,"213":6806,"204":7459,"214":9585,"205":8000,"215":10532,"225":30000,"301":12390,"302":13790,"312":9672,"322":12000,"332":9000,"303":12000,"304":17500,"314":15500,"305":10306,"315":9500};
 const PRODS=[
   {id:"102",n:"Outline II",cat:"Pantallas",stock:500,pMay:17000,pMen:26500},
@@ -142,31 +144,80 @@ const PRODS=[
   {id:"807",n:"Semilla",cat:"Geometría",stock:1,pMay:17400,pMen:26900}
 ];
 
-let state={productos:[],ventas:[],loading:true};
-let carrito=[],canal="men",tabActual="stock",catActiva="Pantallas",editando=null,selCosto=null;
+let state={productos:[],ventas:[],categorias:[],loading:true};
+let carrito=[],canal="men",tabActual="stock",catActiva="Pantallas",editando=null,selCosto=null,matError=null;
+let mostrarNuevaLinea=false,mostrarNuevoProd=false,nuevoProdError=null,nuevaLineaError=null,confirmarBorrado=null;
 
 async function cargar(){
   try{
-    const r=await fetch(SUPA_URL+"/rest/v1/enkki_datos?id=eq.main&select=productos,ventas",{headers:H});
+    const r=await fetch(SUPA_URL+"/rest/v1/enkki_datos?id=eq.main&select=productos,ventas,categorias",{headers:H});
     const j=await r.json();
     if(j&&j[0]&&j[0].productos&&j[0].productos.length>0){
       state.productos=j[0].productos.map(p=>({...p,costoFijo:COSTOS_FIJOS[p.id]||p.costoFijo||0}));
       state.ventas=j[0].ventas||[];
+      state.categorias=j[0].categorias&&j[0].categorias.length?j[0].categorias:CATS_BASE.slice();
       state.loading=false;render();return;
     }
   }catch(e){}
   state.productos=PRODS.map(p=>({...p,costoFijo:COSTOS_FIJOS[p.id]||0,mats:[]}));
-  state.ventas=[];state.loading=false;
+  state.ventas=[];state.categorias=CATS_BASE.slice();state.loading=false;
   await guardar();render();
 }
 
 async function guardar(){
   try{
-    await fetch(SUPA_URL+"/rest/v1/enkki_datos?id=eq.main",{method:"PATCH",headers:H,body:JSON.stringify({productos:state.productos,ventas:state.ventas,updated_at:new Date().toISOString()})});
+    await fetch(SUPA_URL+"/rest/v1/enkki_datos?id=eq.main",{method:"PATCH",headers:H,body:JSON.stringify({productos:state.productos,ventas:state.ventas,categorias:state.categorias,updated_at:new Date().toISOString()})});
     const chk=await fetch(SUPA_URL+"/rest/v1/enkki_datos?id=eq.main&select=id",{headers:H});
     const rows=await chk.json();
-    if(!rows||rows.length===0)await fetch(SUPA_URL+"/rest/v1/enkki_datos",{method:"POST",headers:{...H,"Prefer":"return=minimal"},body:JSON.stringify({id:"main",productos:state.productos,ventas:state.ventas})});
+    if(!rows||rows.length===0)await fetch(SUPA_URL+"/rest/v1/enkki_datos",{method:"POST",headers:{...H,"Prefer":"return=minimal"},body:JSON.stringify({id:"main",productos:state.productos,ventas:state.ventas,categorias:state.categorias})});
   }catch(e){}
+}
+
+function agregarLinea(){
+  const inp=document.getElementById("nl_nombre");
+  const nombre=inp.value.trim();
+  if(!nombre){nuevaLineaError="Poné un nombre para la línea.";render();return;}
+  if(state.categorias.some(c=>c.toLowerCase()===nombre.toLowerCase())){nuevaLineaError="Ya existe una línea con ese nombre.";render();return;}
+  state.categorias=[...state.categorias,nombre];
+  catActiva=nombre;mostrarNuevaLinea=false;nuevaLineaError=null;
+  guardar();render();
+}
+
+function borrarLinea(cat){
+  if((state.productos||[]).some(p=>p.cat===cat)){alert("No podés borrar esta línea porque todavía tiene productos cargados. Borrá o movés los productos primero.");return;}
+  state.categorias=state.categorias.filter(c=>c!==cat);
+  if(catActiva===cat)catActiva=state.categorias[0]||"";
+  guardar();render();
+}
+
+function agregarProducto(){
+  const id=document.getElementById("np_id").value.trim();
+  const n=document.getElementById("np_nombre").value.trim();
+  const stock=+document.getElementById("np_stock").value||0;
+  const pMay=+document.getElementById("np_pmay").value;
+  const pMen=+document.getElementById("np_pmen").value;
+  if(!id||!n){nuevoProdError="Faltan el código y/o el nombre del producto.";render();return;}
+  if(state.productos.some(p=>p.id===id)){nuevoProdError="Ya existe un producto con ese código.";render();return;}
+  if(!pMay||!pMen){nuevoProdError="Cargá los dos precios (mayorista y minorista).";render();return;}
+  state.productos=[...state.productos,{id,n,cat:catActiva,stock,pMay,pMen,costoFijo:0,mats:[]}];
+  mostrarNuevoProd=false;nuevoProdError=null;
+  guardar();render();
+}
+
+function borrarProducto(id){
+  confirmarBorrado=id;
+  render();
+}
+
+function cancelarBorrado(){
+  confirmarBorrado=null;
+  render();
+}
+
+function ejecutarBorrado(id){
+  state.productos=state.productos.filter(p=>p.id!==id);
+  confirmarBorrado=null;
+  guardar();render();
 }
 
 function render(){
@@ -189,7 +240,33 @@ function renderStock(){
   <input class="search-input" type="search" placeholder="🔍 Buscar producto o código..." autocomplete="off" oninput="onBusqStock(this.value)">
   <div id="cats-box"></div>
   <div id="lista-stock"></div>
-  ${editando?renderModalEdit():''}`;
+  ${editando?renderModalEdit():''}
+  ${mostrarNuevaLinea?renderModalNuevaLinea():''}
+  ${mostrarNuevoProd?renderModalNuevoProd():''}
+  ${confirmarBorrado?renderModalConfirmarBorrado():''}`;
+}
+
+function renderModalConfirmarBorrado(){
+  const p=state.productos.find(x=>x.id===confirmarBorrado);
+  if(!p)return"";
+  return `<div class="modal-bg" onclick="if(event.target===this)cancelarBorrado()">
+    <div class="modal">
+      <h3>¿Borrar este producto?</h3>
+      <div class="card" style="margin-bottom:16px">
+        <span style="color:#c9a84c;font-size:11px">${p.id}</span>
+        <div style="color:#f0e0c0;font-size:15px;font-weight:600;margin-top:2px">${p.n}</div>
+      </div>
+      <div style="color:#888;font-size:13px;margin-bottom:16px">Esta acción no se puede deshacer.</div>
+      <div style="display:flex;gap:10px">
+        <button class="btn-dark" style="flex:1" onclick="cancelarBorrado()">Cancelar</button>
+        <button style="flex:1;background:#c0392b;color:#fff;border:none;border-radius:11px;padding:13px;font-size:14px;font-weight:700;cursor:pointer" onclick="ejecutarBorrado('${p.id}')">Sí, borrar</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function catsBar(){
+  return `<div class="cats">${state.categorias.map(c=>`<button class="cat-btn${c===catActiva?" active":""}" onclick="catActiva='${c.replace(/'/g,"\\'")}';renderListaStock()">${c}</button>`).join("")}<button class="cat-add" onclick="mostrarNuevaLinea=true;render()">+ línea</button></div>`;
 }
 
 function onBusqStock(val){
@@ -197,21 +274,26 @@ function onBusqStock(val){
     ?state.productos.filter(p=>p.n.toLowerCase().includes(val.toLowerCase())||p.id.includes(val))
     :state.productos.filter(p=>p.cat===catActiva);
   const catsBox=document.getElementById("cats-box");
-  if(catsBox)catsBox.innerHTML=val.length<2?`<div class="cats">${CATS.map(c=>`<button class="cat-btn${c===catActiva?" active":""}" onclick="catActiva='${c}';onBusqStock('')">${c}</button>`).join("")}</div>`:"";
+  if(catsBox)catsBox.innerHTML=val.length<2?catsBar():"";
   const box=document.getElementById("lista-stock");
   if(box)box.innerHTML=renderProductosList(lista);
 }
 
 function renderListaStock(){
   const catsBox=document.getElementById("cats-box");
-  if(catsBox)catsBox.innerHTML=`<div class="cats">${CATS.map(c=>`<button class="cat-btn${c===catActiva?" active":""}" onclick="catActiva='${c}';renderListaStock()">${c}</button>`).join("")}</div>`;
+  if(catsBox)catsBox.innerHTML=catsBar();
   const box=document.getElementById("lista-stock");
   const lista=state.productos.filter(p=>p.cat===catActiva);
   if(box)box.innerHTML=renderProductosList(lista);
 }
 
 function renderProductosList(lista){
-  return lista.map(p=>{
+  return `<div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:8px">
+    ${lista.length===0&&catActiva?`<button class="btn-sm" style="color:#e74c3c" onclick="borrarLinea('${catActiva.replace(/'/g,"\\'")}')">✕ Borrar línea vacía</button>`:""}
+    <button class="btn-sm" onclick="mostrarNuevoProd=true;render()">+ Agregar producto</button>
+  </div>`+
+  (lista.length===0?'<div style="text-align:center;color:#444;font-size:13px;padding:20px 0">Sin productos en esta línea todavía.</div>':
+  lista.map(p=>{
     const a=p.stock===0,b=p.stock>0&&p.stock<=5;
     return `<div class="card${a?" alert":b?" warn":""}">
       <div style="display:flex;justify-content:space-between;align-items:center">
@@ -224,16 +306,49 @@ function renderProductosList(lista){
           <div style="font-size:14px;font-weight:600;margin-bottom:3px">${p.n}</div>
           <div style="font-size:12px;color:#666">May: <span style="color:#aaa">${fmt(p.pMay)}</span> &nbsp; Men: <span style="color:#c9a84c">${fmt(p.pMen)}</span></div>
         </div>
-        <div style="display:flex;align-items:center;gap:10px;margin-left:10px">
+        <div style="display:flex;align-items:center;gap:8px;margin-left:10px">
           <div style="text-align:center">
             <div style="font-size:22px;font-weight:800;color:${a?"#e74c3c":b?"#c9a84c":"#f0e0c0"};font-family:Georgia,serif">${p.stock}</div>
             <div style="font-size:9px;color:#444">uds</div>
           </div>
           <button class="btn-sm" onclick="abrirEdit('${p.id}')">✏️</button>
+          <button class="btn-sm" style="color:#e74c3c" onclick="borrarProducto('${p.id}')">✕</button>
         </div>
       </div>
     </div>`;
-  }).join("");
+  }).join(""));
+}
+
+function renderModalNuevaLinea(){
+  return `<div class="modal-bg" onclick="if(event.target===this){mostrarNuevaLinea=false;nuevaLineaError=null;render()}">
+    <div class="modal">
+      <h3>Nueva línea de productos</h3>
+      ${nuevaLineaError?`<div class="error-msg">${nuevaLineaError}</div>`:""}
+      <label class="field-label">Nombre de la línea</label>
+      <input class="search-input" type="text" id="nl_nombre" placeholder="Ej: Kits Decorativos, Trofeos">
+      <button class="btn-gold" onclick="agregarLinea()">Crear línea</button>
+    </div>
+  </div>`;
+}
+
+function renderModalNuevoProd(){
+  return `<div class="modal-bg" onclick="if(event.target===this){mostrarNuevoProd=false;nuevoProdError=null;render()}">
+    <div class="modal">
+      <h3>Nuevo producto — ${catActiva}</h3>
+      ${nuevoProdError?`<div class="error-msg">${nuevoProdError}</div>`:""}
+      <label class="field-label">Código</label>
+      <input class="search-input" type="text" id="np_id" placeholder="Ej: 901">
+      <label class="field-label">Nombre</label>
+      <input class="search-input" type="text" id="np_nombre" placeholder="Ej: Kit Decorativo I">
+      <label class="field-label">Stock inicial</label>
+      <input class="search-input" type="number" id="np_stock" placeholder="0">
+      <label class="field-label">Precio mayorista</label>
+      <input class="search-input" type="number" id="np_pmay" placeholder="$">
+      <label class="field-label">Precio minorista</label>
+      <input class="search-input" type="number" id="np_pmen" placeholder="$">
+      <button class="btn-gold" onclick="agregarProducto()">Agregar producto</button>
+    </div>
+  </div>`;
 }
 
 function renderModalEdit(){
@@ -355,7 +470,7 @@ function enviarWsp(){
   let msg="✨ *ENKKI* — Iluminación & Decoración\n━━━━━━━━━━━━━━━━━━\n\n";
   msg+=`📋 *Presupuesto ${canal==="men"?"Minorista":"Mayorista"}*\n📅 ${new Date().toLocaleDateString("es-AR")}\n\n*Detalle:*\n`;
   carrito.forEach(c=>{const p=canal==="men"?c.pMen:c.pMay;msg+=`• ${c.qty}× ${c.n} — $${(p*c.qty).toLocaleString("es-AR")}\n`;});
-  msg+=`\n━━━━━━━━━━━━━━━━━━\n💰 *TOTAL: $${total.toLocaleString("es-AR")}*\n━━━━━━━━━━━━━━━━━━\n\n🔦 Fabricación artesanal en chapa y vidrio\n📱 3415824371\n🌐 enkki.netlify.app\n\n_La antítesis del plástico_ 🖤`;
+  msg+=`\n━━━━━━━━━━━━━━━━━━\n💰 *TOTAL: $${total.toLocaleString("es-AR")}*\n━━━━━━━━━━━━━━━━━━\n\n🔦 Fabricación artesanal en chapa y vidrio\n📱 3415824371\n🌐 enkki2026.netlify.app\n\n_La antítesis del plástico_ 🖤`;
   window.open("https://wa.me/?text="+encodeURIComponent(msg),"_blank");
 }
 
@@ -406,7 +521,7 @@ function renderDetalleCosto(){
   const pSug=Math.round(costo*(1+mo/100));
   const ganancia=Math.round(costo*mo/100);
   return `
-  <button class="btn-sm" onclick="selCosto=null;render()" style="margin-bottom:14px">← Volver</button>
+  <button class="btn-sm" onclick="selCosto=null;matError=null;render()" style="margin-bottom:14px">← Volver</button>
   <div class="card" style="margin-bottom:14px">
     <div style="color:#c9a84c;font-size:11px">${p.id}</div>
     <div style="color:#f0e0c0;font-size:17px;font-weight:700;font-family:Georgia,serif;margin-top:2px">${p.n}</div>
@@ -447,6 +562,7 @@ function renderDetalleCosto(){
   </div>`).join("")}
   <div class="card" style="border-color:#c9a84c22;margin-top:14px">
     <div style="color:#666;font-size:11px;letter-spacing:1px;margin-bottom:10px">+ AGREGAR MATERIAL</div>
+    ${matError?`<div class="error-msg">${matError}</div>`:""}
     <input class="search-input" type="text" id="m_nombre" placeholder="Nombre (ej: Chapa 0.8mm)">
     <div class="grid3">
       <input class="search-input" type="number" id="m_qty" placeholder="Cant." style="margin-bottom:0">
@@ -472,11 +588,17 @@ function aplicarPrecio(id,precio){
 }
 
 function agregarMat(id){
-  const nombre=document.getElementById("m_nombre").value;
-  const qty=+document.getElementById("m_qty").value||1;
-  const unidad=document.getElementById("m_unidad").value;
-  const costo=+document.getElementById("m_costo").value;
-  if(!nombre||!costo)return;
+  const nombreEl=document.getElementById("m_nombre");
+  const qtyEl=document.getElementById("m_qty");
+  const unidadEl=document.getElementById("m_unidad");
+  const costoEl=document.getElementById("m_costo");
+  const nombre=nombreEl.value.trim();
+  const qty=+qtyEl.value||1;
+  const unidad=unidadEl.value.trim();
+  const costo=+costoEl.value;
+  if(!nombre){matError="Falta el nombre del material.";render();return;}
+  if(!costo||costo<=0){matError="Falta el costo del material (tiene que ser mayor a 0).";render();return;}
+  matError=null;
   state.productos=state.productos.map(p=>p.id!==id?p:{...p,mats:[...(p.mats||[]),{id:Date.now(),nombre,qty,unidad,costo}]});
   guardar();render();
 }
@@ -518,7 +640,7 @@ function eliminarVenta(id){
 }
 
 function showTab(tab){
-  tabActual=tab;selCosto=null;
+  tabActual=tab;selCosto=null;matError=null;
   document.querySelectorAll(".nav button").forEach((b,i)=>{
     b.className=(["stock","vender","costos","historial"][i]===tab)?"active":"";
   });
